@@ -3,7 +3,8 @@ dist
 .DS_Store
 *.log
 .env
-backend/data/*.db
+*.tsbuildinfo
+backend/data/*.db*
 backend/output/*
 frontend/dist
 backend/dist
