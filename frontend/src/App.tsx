@@ -1,13 +1,13 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AppShell } from "./layout/AppShell";
 import { AnalysisPage } from "./pages/AnalysisPage";
+import { ArticlePlansPage } from "./pages/ArticlePlansPage";
 import { AutomationRunsPage } from "./pages/AutomationRunsPage";
 import { DashboardPage } from "./pages/DashboardPage";
-import { DraftStudioPage } from "./pages/DraftStudioPage";
-import { ExportCenterPage } from "./pages/ExportCenterPage";
+import { DraftsPage } from "./pages/DraftsPage";
+import { ExportsPage } from "./pages/ExportsPage";
 import { LandingPage } from "./pages/LandingPage";
 import { OpportunitiesPage } from "./pages/OpportunitiesPage";
-import { PlansPage } from "./pages/PlansPage";
 import { SeoAuditPage } from "./pages/SeoAuditPage";
 import { WebsiteDetailPage } from "./pages/WebsiteDetailPage";
 import { WebsitesPage } from "./pages/WebsitesPage";
@@ -24,10 +24,10 @@ export function App() {
         <Route path="analysis" element={<AnalysisPage />} />
         <Route path="seo-audit" element={<SeoAuditPage />} />
         <Route path="opportunities" element={<OpportunitiesPage />} />
-        <Route path="plans" element={<PlansPage />} />
-        <Route path="drafts" element={<DraftStudioPage />} />
+        <Route path="plans" element={<ArticlePlansPage />} />
+        <Route path="drafts" element={<DraftsPage />} />
         <Route path="automation-runs" element={<AutomationRunsPage />} />
-        <Route path="exports" element={<ExportCenterPage />} />
+        <Route path="exports" element={<ExportsPage />} />
       </Route>
       <Route path="*" element={<Navigate replace to="/" />} />
     </Routes>

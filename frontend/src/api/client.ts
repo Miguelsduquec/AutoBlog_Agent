@@ -1,11 +1,17 @@
 import {
   ArticlePlan,
   AutomationRun,
+  AutomationRunRequest,
   ContentOpportunity,
   DashboardSnapshot,
   Draft,
+  DraftGenerationResult,
+  ExportGenerationResult,
   ExportJob,
+  ExportJobDetail,
+  OpportunityGenerationResult,
   OpportunityInput,
+  PlanGenerationResult,
   SeoAuditRun,
   Website,
   WebsitePage,
@@ -85,16 +91,21 @@ export const api = {
       method: "PUT",
       body: JSON.stringify(payload)
     }),
+  deleteOpportunity: (opportunityId: string) =>
+    request<void>(`/opportunities/${opportunityId}`, {
+      method: "DELETE"
+    }),
   generateOpportunities: (websiteId: string, limit = 8) =>
-    request<ContentOpportunity[]>(`/websites/${websiteId}/opportunities/generate`, {
+    request<OpportunityGenerationResult>(`/websites/${websiteId}/generate-opportunities`, {
       method: "POST",
       body: JSON.stringify({ limit })
     }),
   generatePlanFromOpportunity: (opportunityId: string) =>
-    request<ArticlePlan>(`/opportunities/${opportunityId}/generate-plan`, {
+    request<PlanGenerationResult>(`/opportunities/${opportunityId}/generate-plan`, {
       method: "POST"
     }),
-  getPlans: (websiteId?: string) => request<ArticlePlan[]>(withQuery("/plans", websiteId)),
+  getPlans: (websiteId?: string) => request<ArticlePlan[]>(withQuery("/article-plans", websiteId)),
+  getPlan: (planId: string) => request<ArticlePlan>(`/article-plans/${planId}`),
   generatePlans: (websiteId: string, limit = 5) =>
     request<ArticlePlan[]>(`/websites/${websiteId}/plans/generate`, {
       method: "POST",
@@ -103,7 +114,7 @@ export const api = {
   getDrafts: (websiteId?: string) => request<Draft[]>(withQuery("/drafts", websiteId)),
   getDraft: (draftId: string) => request<Draft>(`/drafts/${draftId}`),
   generateDraftFromPlan: (planId: string) =>
-    request<Draft>(`/plans/${planId}/drafts`, {
+    request<DraftGenerationResult>(`/article-plans/${planId}/generate-draft`, {
       method: "POST"
     }),
   generateDraftBatch: (websiteId: string, limit = 3) =>
@@ -122,14 +133,16 @@ export const api = {
     }),
   getAutomationRuns: (websiteId?: string) =>
     request<AutomationRun[]>(withQuery("/automation-runs", websiteId)),
-  triggerAutomationRun: (websiteId: string, runType: string, targetDraftCount = 2) =>
-    request<AutomationRun>(`/websites/${websiteId}/automation-runs/trigger`, {
+  getAutomationRun: (runId: string) => request<AutomationRun>(`/automation-runs/${runId}`),
+  triggerAutomationRun: (websiteId: string, payload: AutomationRunRequest) =>
+    request<AutomationRun>(`/websites/${websiteId}/run-automation`, {
       method: "POST",
-      body: JSON.stringify({ runType, targetDraftCount })
+      body: JSON.stringify(payload)
     }),
   getExports: (websiteId?: string) => request<ExportJob[]>(withQuery("/exports", websiteId)),
+  getExport: (exportJobId: string) => request<ExportJobDetail>(`/exports/${exportJobId}`),
   createExport: (draftId: string) =>
-    request<ExportJob>(`/drafts/${draftId}/export`, {
+    request<ExportGenerationResult>(`/drafts/${draftId}/export`, {
       method: "POST"
     })
 };

@@ -206,6 +206,16 @@ export function getSeedData(): {
       nicheSummary:
         "Polped is positioned as a Microsoft consulting partner for SMB productivity, governance, and collaboration rollouts.",
       contentPillarsJson: ["Microsoft 365 adoption", "Teams governance", "SharePoint collaboration", "SMB productivity"],
+      keywordsJson: ["microsoft", "teams", "sharepoint", "productivity"],
+      extractedDataJson: {
+        url: "https://polped.com",
+        title: "Polped | Microsoft Consulting for Business Productivity",
+        metaDescription: "Helping SMBs implement Microsoft 365, Teams, and secure productivity workflows.",
+        h1: "Microsoft consulting that helps teams work better",
+        h2Headings: ["Microsoft 365 consulting", "Teams phone deployment", "SharePoint intranet delivery"],
+        mainTextContent:
+          "Polped helps businesses adopt Microsoft 365, improve collaboration, modernize workflows, and strengthen security."
+      },
       analyzedPageCount: 3,
       status: "analyzed",
       createdAt: daysAgo(8)
@@ -216,6 +226,16 @@ export function getSeedData(): {
       nicheSummary:
         "Finnova Ops targets finance leaders who need workflow automation for close, approvals, and audit readiness.",
       contentPillarsJson: ["Finance automation", "Month-end close", "Approvals", "Audit readiness"],
+      keywordsJson: ["finance", "close", "approval", "automation"],
+      extractedDataJson: {
+        url: "https://finnovaops.com",
+        title: "Finnova Ops | Finance Operations Automation Software",
+        metaDescription: "Automate reconciliations, approvals, and reporting across modern finance teams.",
+        h1: "Finance operations software for lean teams",
+        h2Headings: ["Automated close", "Approval workflows", "Real-time finance dashboards"],
+        mainTextContent:
+          "Finnova Ops helps finance teams reduce manual close work, centralize requests, and improve visibility."
+      },
       analyzedPageCount: 3,
       status: "analyzed",
       createdAt: daysAgo(6)
@@ -226,6 +246,16 @@ export function getSeedData(): {
       nicheSummary:
         "Greenforge focuses on premium residential landscape design with strong service intent and weak informational coverage.",
       contentPillarsJson: ["Landscape design", "Patio planning", "Outdoor renovation", "Garden inspiration"],
+      keywordsJson: ["landscape", "garden", "patio", "renovation"],
+      extractedDataJson: {
+        url: "https://greenforge-landscapes.com",
+        title: "Greenforge Landscapes | Outdoor Design and Garden Renovation",
+        metaDescription: "Premium outdoor spaces, patio renovations, and landscape design across the South East.",
+        h1: "Outdoor spaces designed to be lived in",
+        h2Headings: ["Landscape design", "Patios and paving", "Garden renovation"],
+        mainTextContent:
+          "Greenforge creates outdoor living spaces with a focus on design, materials, planting, and long-term maintenance."
+      },
       analyzedPageCount: 3,
       status: "analyzed",
       createdAt: daysAgo(5)
@@ -314,10 +344,11 @@ export function getSeedData(): {
       id: "opp-polped-1",
       websiteId: "site-polped",
       keyword: "microsoft 365 migration checklist for small business",
+      topic: "Microsoft 365 Migration Checklist for Small Businesses",
       cluster: "Microsoft 365 adoption",
-      intent: "Informational",
+      intent: "informational",
       relevanceScore: 93,
-      estimatedDifficulty: 48,
+      estimatedDifficulty: "medium",
       priority: "high",
       source: "analysis-gap",
       status: "new",
@@ -327,10 +358,11 @@ export function getSeedData(): {
       id: "opp-polped-2",
       websiteId: "site-polped",
       keyword: "teams governance best practices",
+      topic: "Teams Governance Best Practices",
       cluster: "Teams governance",
-      intent: "Commercial",
+      intent: "commercial",
       relevanceScore: 90,
-      estimatedDifficulty: 55,
+      estimatedDifficulty: "high",
       priority: "high",
       source: "pillar-expansion",
       status: "planned",
@@ -340,10 +372,11 @@ export function getSeedData(): {
       id: "opp-finnova-1",
       websiteId: "site-finnova",
       keyword: "month end close automation software",
+      topic: "Month-End Close Automation Software",
       cluster: "Month-end close",
-      intent: "Commercial",
+      intent: "commercial",
       relevanceScore: 94,
-      estimatedDifficulty: 61,
+      estimatedDifficulty: "high",
       priority: "high",
       source: "product-led",
       status: "planned",
@@ -353,10 +386,11 @@ export function getSeedData(): {
       id: "opp-finnova-2",
       websiteId: "site-finnova",
       keyword: "approval workflow for finance teams",
+      topic: "Approval Workflow for Finance Teams",
       cluster: "Approvals",
-      intent: "Informational",
+      intent: "informational",
       relevanceScore: 88,
-      estimatedDifficulty: 46,
+      estimatedDifficulty: "medium",
       priority: "medium",
       source: "seo-audit",
       status: "new",
@@ -366,10 +400,11 @@ export function getSeedData(): {
       id: "opp-greenforge-1",
       websiteId: "site-greenforge",
       keyword: "garden renovation budget guide",
+      topic: "Garden Renovation Budget Guide",
       cluster: "Outdoor renovation",
-      intent: "Informational",
+      intent: "informational",
       relevanceScore: 91,
-      estimatedDifficulty: 38,
+      estimatedDifficulty: "low",
       priority: "high",
       source: "seo-audit",
       status: "planned",
@@ -379,10 +414,11 @@ export function getSeedData(): {
       id: "opp-greenforge-2",
       websiteId: "site-greenforge",
       keyword: "best patio materials for uk gardens",
+      topic: "Best Patio Materials for UK Gardens",
       cluster: "Patio planning",
-      intent: "Informational",
+      intent: "commercial",
       relevanceScore: 89,
-      estimatedDifficulty: 42,
+      estimatedDifficulty: "medium",
       priority: "medium",
       source: "analysis-gap",
       status: "new",
@@ -398,8 +434,8 @@ export function getSeedData(): {
       title: "Teams Governance Best Practices for Growing Businesses",
       targetKeyword: "teams governance best practices",
       secondaryKeywordsJson: ["microsoft teams governance", "teams policy management", "teams rollout checklist"],
+      searchIntent: "commercial",
       angle: "Help SMB leaders create policies before Teams sprawl slows collaboration.",
-      intent: "Commercial",
       cta: "Book a Microsoft governance workshop with Polped.",
       brief:
         "Explain why governance matters, what to standardize first, and how SMB teams can implement practical controls without slowing users down.",
@@ -413,8 +449,8 @@ export function getSeedData(): {
       title: "How Finance Teams Evaluate Month-End Close Automation Software",
       targetKeyword: "month end close automation software",
       secondaryKeywordsJson: ["close automation tools", "accounting close workflow", "controller automation"],
+      searchIntent: "commercial",
       angle: "Frame the article as an evaluation guide that leads naturally into workflow software.",
-      intent: "Commercial",
       cta: "Request a Finnova Ops workflow walkthrough.",
       brief:
         "Cover pain points, evaluation criteria, common implementation mistakes, and how teams can identify quick wins for close automation.",
@@ -428,8 +464,8 @@ export function getSeedData(): {
       title: "Garden Renovation Budget Guide: What UK Homeowners Should Plan For",
       targetKeyword: "garden renovation budget guide",
       secondaryKeywordsJson: ["garden renovation costs", "landscape design budget", "outdoor renovation planning"],
+      searchIntent: "informational",
       angle: "Offer practical cost framing without sounding salesy, while reinforcing premium planning value.",
-      intent: "Informational",
       cta: "Book a design consultation with Greenforge Landscapes.",
       brief:
         "Break down cost drivers, planning stages, material choices, and how homeowners can phase a project intelligently.",
@@ -517,38 +553,93 @@ export function getSeedData(): {
     {
       id: "run-polped-1",
       websiteId: "site-polped",
-      runType: "monthly-auto-generation",
+      runType: "full-pipeline",
       status: "completed",
       logsJson: [
-        "Loaded website profile and latest analysis memory.",
-        "Generated 4 opportunities, promoted 2 to plans, drafted 1 article."
+        "Loaded website \"Polped\" for a full-pipeline automation run.",
+        "Reused existing analysis from the website memory.",
+        "Generated 2 new analysis-based opportunities and promoted 1 to a plan.",
+        "Created a review draft for the selected Microsoft 365 topic."
       ],
-      outputSummary: "4 opportunities, 2 plans, 1 review draft",
-      createdAt: daysAgo(2)
+      outputSummary: {
+        analysisCreated: false,
+        opportunitiesCreated: 2,
+        plansCreated: 1,
+        draftsCreated: 1,
+        exportsCreated: 0,
+        skippedItems: 1,
+        errors: [],
+        outputIds: {
+          opportunityIds: ["opp-polped-1", "opp-polped-2"],
+          planIds: ["plan-polped-1"],
+          draftIds: ["draft-polped-1"],
+          exportJobIds: []
+        },
+        message: "2 opportunities created, 1 plan created, 1 draft created, 1 item skipped"
+      },
+      createdAt: daysAgo(2),
+      updatedAt: daysAgo(2)
     },
     {
       id: "run-finnova-1",
       websiteId: "site-finnova",
-      runType: "weekly-draft-batch",
-      status: "running",
+      runType: "full-pipeline",
+      status: "partial",
       logsJson: [
-        "Loaded close automation content cluster.",
-        "Generating follow-up article briefs from commercial opportunities."
+        "Loaded website \"Finnova Ops\" for a full-pipeline automation run.",
+        "Reused existing finance operations analysis.",
+        "Selected high-priority close automation opportunities for planning.",
+        "Created 1 article plan but one downstream draft step failed."
       ],
-      outputSummary: "In progress: 2 plans queued for drafting",
-      createdAt: hoursAgo(5)
+      outputSummary: {
+        analysisCreated: false,
+        opportunitiesCreated: 1,
+        plansCreated: 1,
+        draftsCreated: 0,
+        exportsCreated: 0,
+        skippedItems: 1,
+        errors: [
+          "Draft generation failed for \"How Finance Teams Evaluate Month-End Close Automation Software\": Example downstream formatting error."
+        ],
+        outputIds: {
+          opportunityIds: ["opp-finnova-1"],
+          planIds: ["plan-finnova-1"],
+          draftIds: [],
+          exportJobIds: []
+        },
+        message: "1 opportunity created, 1 plan created, 1 item skipped"
+      },
+      createdAt: hoursAgo(5),
+      updatedAt: hoursAgo(4)
     },
     {
       id: "run-greenforge-1",
       websiteId: "site-greenforge",
-      runType: "manual-analysis-refresh",
+      runType: "opportunities-only",
       status: "completed",
       logsJson: [
-        "Crawled homepage, services, and projects pages.",
-        "Detected informational content gap around cost and planning queries."
+        "Loaded website \"Greenforge Landscapes\" for an opportunities-only automation run.",
+        "Website analysis completed with 3 analyzed pages.",
+        "Generated informational and commercial topics around planning, costs, and patio design."
       ],
-      outputSummary: "Analysis refreshed, 2 new opportunities created",
-      createdAt: hoursAgo(20)
+      outputSummary: {
+        analysisCreated: true,
+        opportunitiesCreated: 2,
+        plansCreated: 0,
+        draftsCreated: 0,
+        exportsCreated: 0,
+        skippedItems: 0,
+        errors: [],
+        outputIds: {
+          opportunityIds: ["opp-greenforge-1", "opp-greenforge-2"],
+          planIds: [],
+          draftIds: [],
+          exportJobIds: []
+        },
+        message: "analysis refreshed, 2 opportunities created"
+      },
+      createdAt: hoursAgo(20),
+      updatedAt: hoursAgo(19)
     }
   ];
 

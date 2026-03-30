@@ -27,30 +27,29 @@ export function DashboardPage() {
       <div className="page-toolbar">
         <div>
           <h1>Autoblog operations overview</h1>
-          <p>Monitor website coverage, content generation velocity, and review-ready output from one place.</p>
+          <p>Track the core Phase 1 workflow: websites, analysis coverage, and discovered opportunities.</p>
         </div>
         <Link className="button" to="/app/websites">
           Add website
         </Link>
       </div>
 
-      <div className="metrics-grid">
+      <div className="metrics-grid four-up">
         <MetricCard title="Websites" value={dashboardQuery.data.totals.websites} help="Tracked domains in the workspace" />
         <MetricCard
           title="Analysis Runs"
           value={dashboardQuery.data.totals.analysisRuns}
           help="Website analyses stored in the system"
         />
-        <MetricCard title="Drafts" value={dashboardQuery.data.totals.drafts} help="Generated articles across all websites" />
         <MetricCard
-          title="Pending Review"
-          value={dashboardQuery.data.totals.pendingReview}
-          help="Drafts waiting for a human pass"
+          title="Analyzed Pages"
+          value={dashboardQuery.data.totals.analyzedPages}
+          help="Extracted page records stored for website analysis"
         />
         <MetricCard
-          title="Automation Runs"
-          value={dashboardQuery.data.totals.automationRuns}
-          help="Scheduled or manual runs tracked with logs"
+          title="Opportunities"
+          value={dashboardQuery.data.totals.opportunities}
+          help="Current topic opportunities ready for prioritization"
         />
       </div>
 
@@ -84,27 +83,37 @@ export function DashboardPage() {
           )}
         </SectionCard>
 
-        <SectionCard title="Latest automation runs" description="Track pipeline execution across websites.">
-          {dashboardQuery.data.latestAutomationRuns.length === 0 ? (
-            <EmptyState title="No automation runs yet" description="Trigger a workflow run to see progress here." />
+        <SectionCard title="Website portfolio snapshot" description="Recent websites in the workspace and their latest context.">
+          {websitesQuery.data.length === 0 ? (
+            <EmptyState title="No websites yet" description="Add your first website to start the Phase 1 workflow." />
           ) : (
-            <div className="stack-list">
-              {dashboardQuery.data.latestAutomationRuns.map((run) => (
-                <article className="list-card" key={run.id}>
-                  <div className="list-card-top">
-                    <strong>{websiteMap.get(run.websiteId)?.name ?? run.websiteId}</strong>
-                    <StatusBadge value={run.status} />
-                  </div>
-                  <p>{run.outputSummary}</p>
-                  <small>{formatDate(run.createdAt)}</small>
-                </article>
-              ))}
-            </div>
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Website</th>
+                  <th>Market</th>
+                  <th>Niche</th>
+                  <th>Updated</th>
+                </tr>
+              </thead>
+              <tbody>
+                {websitesQuery.data.slice(0, 5).map((website) => (
+                  <tr key={website.id}>
+                    <td>{website.name}</td>
+                    <td>
+                      {website.language} • {website.targetCountry}
+                    </td>
+                    <td>{website.niche}</td>
+                    <td>{formatDate(website.updatedAt)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           )}
         </SectionCard>
       </div>
 
-      <SectionCard title="Top opportunities snapshot" description="High-priority topics that are closest to planning and drafting.">
+      <SectionCard title="Top opportunities snapshot" description="High-priority topics surfaced during Phase 1 discovery.">
         {dashboardQuery.data.topOpportunities.length === 0 ? (
           <EmptyState title="No opportunities yet" description="Run opportunity discovery on a website to populate this list." />
         ) : (

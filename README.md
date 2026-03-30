@@ -2,12 +2,32 @@
 
 Autoblog Agent is an AI-powered SEO blog automation platform that generates niche-relevant blog articles automatically for any website.
 
+## Current phase
+
+The current implementation is intentionally focused on a practical MVP foundation across Phase 1 through Phase 6:
+
+- Project scaffold
+- SQLite schema
+- Seed data
+- Dashboard
+- Websites CRUD
+- Website Analysis page
+- Opportunities CRUD
+- Automatic opportunity generation from latest website analysis
+- Article plan generation from content opportunities
+- Draft generation from article plans
+- Export packaging for publication-ready article assets
+- Manual automation runs for the full multi-step article pipeline
+- Core docs
+
+The main focus is now the workflow from website analysis to opportunities to article plans to structured draft objects, export packages, and manually triggered automation runs.
+
 ## What it includes
 
 - React + Vite + TypeScript frontend
 - Node.js + Express + TypeScript backend
 - SQLite MVP data layer with seed data
-- Website analysis, SEO audit, topic discovery, plan generation, draft generation, automation runs, and export packaging
+- Website analysis, SEO audit, analysis-based opportunity generation, plan generation, draft generation, automation runs, and export packaging
 - Landing page plus operational SaaS application UI
 
 ## Run locally
@@ -50,8 +70,21 @@ backend/    Express API, SQLite schema, seed data, agent orchestration, exports
 docs/       Product, architecture, and roadmap notes
 ```
 
+## Phase docs
+
+- `docs/phase-1.md`
+- `docs/phase-2.md`
+- `docs/phase-3.md`
+- `docs/phase-4.md`
+- `docs/phase-5.md`
+- `docs/phase-6.md`
+- `docs/product.md`
+- `docs/architecture.md`
+- `docs/roadmap.md`
+
 ## Notes
 
 - The backend seeds demo data automatically on first run and also supports manual reseeding via `npm run seed`.
-- The crawler, topic discovery, and drafting services are MVP-ready and intentionally modular so real providers can replace mock logic later.
+- The crawler, website analysis, opportunity generation, article planning, draft generation, automation orchestration, and export services are modular mock implementations so real AI providers or CMS integrations can replace them later without changing the product workflow.
 - Export packages are written to `backend/output`.
+- Automation runs are synchronous in this MVP and are intentionally structured so queues or background workers can be added later.

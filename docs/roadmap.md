@@ -1,6 +1,23 @@
 # Roadmap
 
-## Now
+## Phase 1
+
+- Project scaffold
+- SQLite schema
+- Seed data
+- Dashboard
+- Websites CRUD
+- Website Analysis
+- Opportunities CRUD
+
+## Later phases
+
+- Improve article planning and draft quality
+- Expand automation orchestration
+- Add SEO audit depth and scoring sophistication
+- Add export and publishing integrations
+
+## Previously scaffolded but not the current focus
 
 - Manual website onboarding
 - Website crawl and analysis

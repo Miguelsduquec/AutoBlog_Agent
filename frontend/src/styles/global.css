@@ -62,10 +62,16 @@ button {
   padding: 32px;
 }
 
+.app-shell-page {
+  min-height: 100vh;
+  padding: 32px;
+}
+
 .landing-nav,
 .hero,
 .landing-section,
-.landing-cta {
+.landing-cta,
+.app-layout {
   max-width: 1180px;
   margin: 0 auto;
 }
@@ -76,6 +82,10 @@ button {
   justify-content: space-between;
   gap: 24px;
   padding-bottom: 28px;
+}
+
+.app-global-nav {
+  padding-bottom: 20px;
 }
 
 .landing-brand,
@@ -106,7 +116,8 @@ button {
 .mini-pill-row,
 .topbar-actions,
 .form-actions,
-.inline-links {
+.inline-links,
+.range-inputs {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
@@ -182,6 +193,14 @@ button {
   transform: translateY(-1px);
 }
 
+.button:disabled,
+.button.secondary:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
 .hero-meta span,
 .mini-pill,
 .topbar-pill,
@@ -192,6 +211,41 @@ button {
   padding: 8px 12px;
   border-radius: 999px;
   font-size: 0.84rem;
+}
+
+.table-subtext {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.status-informational,
+.status-analysis,
+.status-low,
+.status-new {
+  background: rgba(226, 239, 236, 0.92);
+  color: #24564d;
+}
+
+.status-commercial,
+.status-high,
+.status-review,
+.status-ready {
+  background: rgba(216, 242, 233, 0.96);
+  color: #0d6d58;
+}
+
+.status-comparison,
+.status-medium,
+.status-planned {
+  background: rgba(233, 237, 244, 0.94);
+  color: #43556b;
+}
+
+.status-local,
+.status-manual {
+  background: rgba(247, 236, 223, 0.96);
+  color: #8f5d1d;
 }
 
 .hero-meta span,
@@ -358,7 +412,7 @@ button {
 .app-layout {
   display: grid;
   grid-template-columns: 280px 1fr;
-  min-height: 100vh;
+  min-height: calc(100vh - 112px);
 }
 
 .sidebar {
@@ -476,6 +530,10 @@ button {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.metrics-grid.four-up {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .grid-two.wide-right {
   grid-template-columns: 1.45fr 1fr;
 }
@@ -509,6 +567,10 @@ button {
   padding: 0;
   border: 0;
   background: transparent;
+}
+
+.link-button.destructive {
+  color: #9b2432;
 }
 
 .row-actions {
@@ -546,6 +608,11 @@ button {
 .status-commercial {
   background: rgba(26, 109, 177, 0.12);
   color: #165d93;
+}
+
+.status-partial {
+  background: rgba(247, 236, 223, 0.96);
+  color: #8f5d1d;
 }
 
 .status-failed,
@@ -695,6 +762,20 @@ textarea {
   color: #40535a;
 }
 
+.code-block {
+  margin: 0;
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(17, 35, 40, 0.04);
+  border: 1px solid var(--border);
+  color: #354a51;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.84rem;
+  line-height: 1.6;
+  overflow-x: auto;
+  white-space: pre-wrap;
+}
+
 .log-line {
   font-family: "IBM Plex Mono", monospace;
   font-size: 0.84rem;
@@ -727,6 +808,7 @@ textarea {
 
 @media (max-width: 860px) {
   .landing-page,
+  .app-shell-page,
   .content-frame {
     padding: 18px;
   }

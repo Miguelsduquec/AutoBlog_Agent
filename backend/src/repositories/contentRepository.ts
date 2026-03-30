@@ -29,12 +29,13 @@ export const opportunityRepository = {
   create(opportunity: ContentOpportunity): ContentOpportunity {
     db.prepare(`
       INSERT INTO content_opportunities (
-        id, website_id, keyword, cluster, intent, relevance_score, estimated_difficulty, priority, source, status, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        id, website_id, keyword, topic, cluster, intent, relevance_score, estimated_difficulty, priority, source, status, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       opportunity.id,
       opportunity.websiteId,
       opportunity.keyword,
+      opportunity.topic,
       opportunity.cluster,
       opportunity.intent,
       opportunity.relevanceScore,
@@ -51,8 +52,8 @@ export const opportunityRepository = {
   createMany(opportunities: ContentOpportunity[]): ContentOpportunity[] {
     const insert = db.prepare(`
       INSERT INTO content_opportunities (
-        id, website_id, keyword, cluster, intent, relevance_score, estimated_difficulty, priority, source, status, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        id, website_id, keyword, topic, cluster, intent, relevance_score, estimated_difficulty, priority, source, status, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     const transaction = db.transaction(() => {
@@ -61,6 +62,7 @@ export const opportunityRepository = {
           opportunity.id,
           opportunity.websiteId,
           opportunity.keyword,
+          opportunity.topic,
           opportunity.cluster,
           opportunity.intent,
           opportunity.relevanceScore,
@@ -80,10 +82,11 @@ export const opportunityRepository = {
   update(opportunity: ContentOpportunity): ContentOpportunity {
     db.prepare(`
       UPDATE content_opportunities
-      SET keyword = ?, cluster = ?, intent = ?, relevance_score = ?, estimated_difficulty = ?, priority = ?, source = ?, status = ?
+      SET keyword = ?, topic = ?, cluster = ?, intent = ?, relevance_score = ?, estimated_difficulty = ?, priority = ?, source = ?, status = ?
       WHERE id = ?
     `).run(
       opportunity.keyword,
+      opportunity.topic,
       opportunity.cluster,
       opportunity.intent,
       opportunity.relevanceScore,
@@ -95,6 +98,29 @@ export const opportunityRepository = {
     );
 
     return opportunity;
+  },
+
+  delete(id: string): void {
+    db.prepare("DELETE FROM content_opportunities WHERE id = ?").run(id);
+  },
+
+  findByWebsiteAndKeyword(websiteId: string, keyword: string): ContentOpportunity | null {
+    const row = db
+      .prepare("SELECT * FROM content_opportunities WHERE website_id = ? AND lower(keyword) = lower(?) LIMIT 1")
+      .get(websiteId, keyword) as Record<string, unknown> | undefined;
+    return row ? mapOpportunity(row) : null;
+  },
+
+  count(websiteId?: string): number {
+    if (websiteId) {
+      const row = db
+        .prepare("SELECT COUNT(*) AS count FROM content_opportunities WHERE website_id = ?")
+        .get(websiteId) as { count: number };
+      return row.count;
+    }
+
+    const row = db.prepare("SELECT COUNT(*) AS count FROM content_opportunities").get() as { count: number };
+    return row.count;
   },
 
   top(limit = 5): ContentOpportunity[] {
@@ -136,11 +162,18 @@ export const articlePlanRepository = {
     return row ? mapArticlePlan(row) : null;
   },
 
+  findByOpportunityId(opportunityId: string): ArticlePlan | null {
+    const row = db
+      .prepare("SELECT * FROM article_plans WHERE opportunity_id = ? ORDER BY datetime(created_at) DESC LIMIT 1")
+      .get(opportunityId) as Record<string, unknown> | undefined;
+    return row ? mapArticlePlan(row) : null;
+  },
+
   create(plan: ArticlePlan): ArticlePlan {
     db.prepare(`
       INSERT INTO article_plans (
-        id, website_id, opportunity_id, title, target_keyword, secondary_keywords_json, angle, intent, cta, brief, status, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        id, website_id, opportunity_id, title, target_keyword, secondary_keywords_json, search_intent, angle, intent, cta, brief, status, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       plan.id,
       plan.websiteId,
@@ -148,8 +181,9 @@ export const articlePlanRepository = {
       plan.title,
       plan.targetKeyword,
       JSON.stringify(plan.secondaryKeywordsJson),
+      plan.searchIntent,
       plan.angle,
-      plan.intent,
+      plan.searchIntent,
       plan.cta,
       plan.brief,
       plan.status,
@@ -162,8 +196,8 @@ export const articlePlanRepository = {
   createMany(plans: ArticlePlan[]): ArticlePlan[] {
     const insert = db.prepare(`
       INSERT INTO article_plans (
-        id, website_id, opportunity_id, title, target_keyword, secondary_keywords_json, angle, intent, cta, brief, status, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        id, website_id, opportunity_id, title, target_keyword, secondary_keywords_json, search_intent, angle, intent, cta, brief, status, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     const transaction = db.transaction(() => {
@@ -175,8 +209,9 @@ export const articlePlanRepository = {
           plan.title,
           plan.targetKeyword,
           JSON.stringify(plan.secondaryKeywordsJson),
+          plan.searchIntent,
           plan.angle,
-          plan.intent,
+          plan.searchIntent,
           plan.cta,
           plan.brief,
           plan.status,
@@ -192,14 +227,15 @@ export const articlePlanRepository = {
   update(plan: ArticlePlan): ArticlePlan {
     db.prepare(`
       UPDATE article_plans
-      SET title = ?, target_keyword = ?, secondary_keywords_json = ?, angle = ?, intent = ?, cta = ?, brief = ?, status = ?, opportunity_id = ?
+      SET title = ?, target_keyword = ?, secondary_keywords_json = ?, search_intent = ?, angle = ?, intent = ?, cta = ?, brief = ?, status = ?, opportunity_id = ?
       WHERE id = ?
     `).run(
       plan.title,
       plan.targetKeyword,
       JSON.stringify(plan.secondaryKeywordsJson),
+      plan.searchIntent,
       plan.angle,
-      plan.intent,
+      plan.searchIntent,
       plan.cta,
       plan.brief,
       plan.status,
@@ -226,6 +262,13 @@ export const draftRepository = {
 
   getById(id: string): Draft | null {
     const row = db.prepare("SELECT * FROM drafts WHERE id = ?").get(id) as Record<string, unknown> | undefined;
+    return row ? mapDraft(row) : null;
+  },
+
+  findByArticlePlanId(articlePlanId: string): Draft | null {
+    const row = db
+      .prepare("SELECT * FROM drafts WHERE article_plan_id = ? ORDER BY datetime(created_at) DESC LIMIT 1")
+      .get(articlePlanId) as Record<string, unknown> | undefined;
     return row ? mapDraft(row) : null;
   },
 

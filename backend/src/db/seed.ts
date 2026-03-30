@@ -67,8 +67,8 @@ export function seedDatabase(reset = false): void {
 
   const insertAnalysis = db.prepare(`
     INSERT OR IGNORE INTO website_analysis_runs (
-      id, website_id, niche_summary, content_pillars_json, analyzed_page_count, status, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+      id, website_id, niche_summary, content_pillars_json, keywords_json, extracted_data_json, analyzed_page_count, status, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   for (const run of seed.analysisRuns) {
@@ -77,6 +77,8 @@ export function seedDatabase(reset = false): void {
       run.websiteId,
       run.nicheSummary,
       JSON.stringify(run.contentPillarsJson),
+      JSON.stringify(run.keywordsJson),
+      JSON.stringify(run.extractedDataJson),
       run.analyzedPageCount,
       run.status,
       run.createdAt
@@ -101,8 +103,8 @@ export function seedDatabase(reset = false): void {
 
   const insertOpportunity = db.prepare(`
     INSERT OR IGNORE INTO content_opportunities (
-      id, website_id, keyword, cluster, intent, relevance_score, estimated_difficulty, priority, source, status, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      id, website_id, keyword, topic, cluster, intent, relevance_score, estimated_difficulty, priority, source, status, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   for (const opportunity of seed.opportunities) {
@@ -110,6 +112,7 @@ export function seedDatabase(reset = false): void {
       opportunity.id,
       opportunity.websiteId,
       opportunity.keyword,
+      opportunity.topic,
       opportunity.cluster,
       opportunity.intent,
       opportunity.relevanceScore,
@@ -123,8 +126,8 @@ export function seedDatabase(reset = false): void {
 
   const insertPlan = db.prepare(`
     INSERT OR IGNORE INTO article_plans (
-      id, website_id, opportunity_id, title, target_keyword, secondary_keywords_json, angle, intent, cta, brief, status, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      id, website_id, opportunity_id, title, target_keyword, secondary_keywords_json, search_intent, angle, intent, cta, brief, status, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   for (const plan of seed.articlePlans) {
@@ -135,8 +138,9 @@ export function seedDatabase(reset = false): void {
       plan.title,
       plan.targetKeyword,
       JSON.stringify(plan.secondaryKeywordsJson),
+      plan.searchIntent,
       plan.angle,
-      plan.intent,
+      plan.searchIntent,
       plan.cta,
       plan.brief,
       plan.status,
@@ -171,8 +175,8 @@ export function seedDatabase(reset = false): void {
 
   const insertRun = db.prepare(`
     INSERT OR IGNORE INTO automation_runs (
-      id, website_id, run_type, status, logs_json, output_summary, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+      id, website_id, run_type, status, logs_json, output_summary, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   for (const run of seed.automationRuns) {
@@ -182,8 +186,9 @@ export function seedDatabase(reset = false): void {
       run.runType,
       run.status,
       JSON.stringify(run.logsJson),
-      run.outputSummary,
-      run.createdAt
+      JSON.stringify(run.outputSummary),
+      run.createdAt,
+      run.updatedAt
     );
   }
 

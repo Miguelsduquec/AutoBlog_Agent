@@ -101,5 +101,10 @@ export const websitePageRepository = {
     });
 
     transaction();
+  },
+
+  count(): number {
+    const row = db.prepare("SELECT COUNT(*) AS count FROM website_pages").get() as { count: number };
+    return row.count;
   }
 };

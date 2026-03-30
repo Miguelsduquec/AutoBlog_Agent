@@ -5,7 +5,7 @@ import { EmptyState } from "../components/EmptyState";
 import { SectionCard } from "../components/SectionCard";
 import { StatusBadge } from "../components/StatusBadge";
 import { useAsyncData } from "../hooks/useAsyncData";
-import { WebsiteInput } from "../types";
+import { Website, WebsiteInput } from "../types";
 import { formatDate } from "../utils/format";
 
 const initialWebsiteForm: WebsiteInput = {
@@ -22,21 +22,59 @@ const initialWebsiteForm: WebsiteInput = {
 export function WebsitesPage() {
   const websitesQuery = useAsyncData(api.getWebsites, []);
   const [formState, setFormState] = useState<WebsiteInput>(initialWebsiteForm);
+  const [editingWebsite, setEditingWebsite] = useState<Website | null>(null);
   const [submitting, setSubmitting] = useState<boolean>(false);
 
   const websiteCountLabel = useMemo(() => websitesQuery.data?.length ?? 0, [websitesQuery.data]);
+
+  function beginEdit(website: Website) {
+    setEditingWebsite(website);
+    setFormState({
+      name: website.name,
+      domain: website.domain,
+      language: website.language,
+      targetCountry: website.targetCountry,
+      niche: website.niche,
+      tone: website.tone,
+      contentGoal: website.contentGoal,
+      publishingFrequency: website.publishingFrequency
+    });
+  }
+
+  function resetForm() {
+    setEditingWebsite(null);
+    setFormState(initialWebsiteForm);
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitting(true);
 
     try {
-      await api.createWebsite(formState);
-      setFormState(initialWebsiteForm);
+      if (editingWebsite) {
+        await api.updateWebsite(editingWebsite.id, formState);
+      } else {
+        await api.createWebsite(formState);
+      }
+
+      resetForm();
       await websitesQuery.refresh();
     } finally {
       setSubmitting(false);
     }
+  }
+
+  async function handleDelete(website: Website) {
+    const confirmed = window.confirm(`Delete ${website.name}? This will remove its Phase 1 data from the local workspace.`);
+    if (!confirmed) {
+      return;
+    }
+
+    await api.deleteWebsite(website.id);
+    if (editingWebsite?.id === website.id) {
+      resetForm();
+    }
+    await websitesQuery.refresh();
   }
 
   if (websitesQuery.loading) {
@@ -71,6 +109,7 @@ export function WebsitesPage() {
                   <th>Niche</th>
                   <th>Publishing</th>
                   <th>Updated</th>
+                  <th />
                 </tr>
               </thead>
               <tbody>
@@ -90,6 +129,14 @@ export function WebsitesPage() {
                       <StatusBadge value={website.publishingFrequency} />
                     </td>
                     <td>{formatDate(website.updatedAt)}</td>
+                    <td className="row-actions">
+                      <button className="link-button" onClick={() => beginEdit(website)}>
+                        Edit
+                      </button>
+                      <button className="link-button destructive" onClick={() => void handleDelete(website)}>
+                        Delete
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -97,7 +144,10 @@ export function WebsitesPage() {
           )}
         </SectionCard>
 
-        <SectionCard title="Add website" description="The first version keeps setup manual so the website context is explicit and reliable.">
+        <SectionCard
+          title={editingWebsite ? "Edit website" : "Add website"}
+          description="The first version keeps setup manual so the website context is explicit and reliable."
+        >
           <form className="form-grid" onSubmit={handleSubmit}>
             <label>
               Website name
@@ -146,9 +196,16 @@ export function WebsitesPage() {
                 <option>Monthly</option>
               </select>
             </label>
-            <button className="button" disabled={submitting} type="submit">
-              {submitting ? "Adding website…" : "Add website"}
-            </button>
+            <div className="form-actions span-2">
+              <button className="button" disabled={submitting} type="submit">
+                {submitting ? (editingWebsite ? "Saving…" : "Adding website…") : editingWebsite ? "Save changes" : "Add website"}
+              </button>
+              {editingWebsite ? (
+                <button className="button secondary" type="button" onClick={resetForm}>
+                  Cancel
+                </button>
+              ) : null}
+            </div>
           </form>
         </SectionCard>
       </div>

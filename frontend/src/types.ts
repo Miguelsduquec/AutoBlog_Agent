@@ -8,6 +8,11 @@ export type WorkflowStatus =
   | "ready"
   | "exported"
   | "failed";
+export type AutomationRunType = "analyze-only" | "opportunities-only" | "full-pipeline";
+export type AutomationStatus = "queued" | "running" | "completed" | "failed" | "partial";
+export type OpportunityIntent = "informational" | "commercial" | "comparison" | "local";
+export type OpportunityPriority = "low" | "medium" | "high";
+export type OpportunityDifficulty = "low" | "medium" | "high";
 
 export interface Website {
   id: string;
@@ -41,9 +46,20 @@ export interface WebsiteAnalysisRun {
   websiteId: string;
   nicheSummary: string;
   contentPillarsJson: string[];
+  keywordsJson: string[];
+  extractedDataJson: ExtractedWebsiteData;
   analyzedPageCount: number;
   status: WorkflowStatus;
   createdAt: string;
+}
+
+export interface ExtractedWebsiteData {
+  url: string;
+  title: string;
+  metaDescription: string;
+  h1: string;
+  h2Headings: string[];
+  mainTextContent: string;
 }
 
 export interface SeoFinding {
@@ -68,14 +84,21 @@ export interface ContentOpportunity {
   id: string;
   websiteId: string;
   keyword: string;
+  topic: string;
   cluster: string;
-  intent: string;
+  intent: OpportunityIntent;
   relevanceScore: number;
-  estimatedDifficulty: number;
-  priority: string;
+  estimatedDifficulty: OpportunityDifficulty;
+  priority: OpportunityPriority;
   source: string;
   status: WorkflowStatus;
   createdAt: string;
+}
+
+export interface OpportunityGenerationResult {
+  createdOpportunities: ContentOpportunity[];
+  skippedDuplicatesCount: number;
+  summaryMessage: string;
 }
 
 export interface ArticlePlan {
@@ -85,12 +108,19 @@ export interface ArticlePlan {
   title: string;
   targetKeyword: string;
   secondaryKeywordsJson: string[];
+  searchIntent: OpportunityIntent;
   angle: string;
-  intent: string;
   cta: string;
   brief: string;
   status: WorkflowStatus;
   createdAt: string;
+}
+
+export interface PlanGenerationResult {
+  plan: ArticlePlan;
+  skipped: boolean;
+  regenerated: boolean;
+  summaryMessage: string;
 }
 
 export interface Draft {
@@ -110,14 +140,46 @@ export interface Draft {
   createdAt: string;
 }
 
+export interface DraftGenerationResult {
+  draft: Draft;
+  skipped: boolean;
+  regenerated: boolean;
+  summaryMessage: string;
+}
+
 export interface AutomationRun {
   id: string;
   websiteId: string;
-  runType: string;
-  status: "queued" | "running" | "completed" | "failed";
+  runType: AutomationRunType;
+  status: AutomationStatus;
   logsJson: string[];
-  outputSummary: string;
+  outputSummary: AutomationRunSummary;
   createdAt: string;
+  updatedAt: string;
+}
+
+export interface AutomationRunSummary {
+  analysisCreated: boolean;
+  opportunitiesCreated: number;
+  plansCreated: number;
+  draftsCreated: number;
+  exportsCreated: number;
+  skippedItems: number;
+  errors: string[];
+  outputIds: {
+    opportunityIds: string[];
+    planIds: string[];
+    draftIds: string[];
+    exportJobIds: string[];
+  };
+  message: string;
+}
+
+export interface AutomationRunRequest {
+  runType: AutomationRunType;
+  maxOpportunities?: number;
+  generateDrafts?: boolean;
+  exportDrafts?: boolean;
 }
 
 export interface ExportJob {
@@ -127,6 +189,23 @@ export interface ExportJob {
   exportPath: string;
   status: WorkflowStatus;
   createdAt: string;
+}
+
+export interface ExportGenerationResult {
+  exportJob: ExportJob;
+  exportPath: string;
+  files: string[];
+  skipped: boolean;
+  regenerated: boolean;
+  summaryMessage: string;
+}
+
+export interface ExportJobDetail {
+  exportJob: ExportJob;
+  files: string[];
+  draft: Draft | null;
+  articlePlan: ArticlePlan | null;
+  website: Website | null;
 }
 
 export interface WebsiteDetail {
@@ -142,12 +221,10 @@ export interface DashboardSnapshot {
   totals: {
     websites: number;
     analysisRuns: number;
-    drafts: number;
-    pendingReview: number;
-    automationRuns: number;
+    analyzedPages: number;
+    opportunities: number;
   };
   recentAnalysisRuns: WebsiteAnalysisRun[];
-  latestAutomationRuns: AutomationRun[];
   topOpportunities: ContentOpportunity[];
 }
 
@@ -165,11 +242,12 @@ export interface WebsiteInput {
 export interface OpportunityInput {
   websiteId: string;
   keyword: string;
+  topic: string;
   cluster: string;
-  intent: string;
+  intent: OpportunityIntent;
   relevanceScore: number;
-  estimatedDifficulty: number;
-  priority: string;
+  estimatedDifficulty: OpportunityDifficulty;
+  priority: OpportunityPriority;
   source: string;
   status: WorkflowStatus;
 }

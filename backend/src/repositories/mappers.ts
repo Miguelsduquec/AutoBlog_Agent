@@ -1,8 +1,10 @@
 import {
   ArticlePlan,
   AutomationRun,
+  AutomationRunSummary,
   ContentOpportunity,
   Draft,
+  ExtractedWebsiteData,
   ExportJob,
   SeoAuditRun,
   Website,
@@ -12,6 +14,128 @@ import {
 import { parseJsonArray } from "../utils/json";
 
 type Row = Record<string, unknown>;
+
+const defaultExtractedData: ExtractedWebsiteData = {
+  url: "",
+  title: "",
+  metaDescription: "",
+  h1: "",
+  h2Headings: [],
+  mainTextContent: ""
+};
+
+const defaultAutomationSummary: AutomationRunSummary = {
+  analysisCreated: false,
+  opportunitiesCreated: 0,
+  plansCreated: 0,
+  draftsCreated: 0,
+  exportsCreated: 0,
+  skippedItems: 0,
+  errors: [],
+  outputIds: {
+    opportunityIds: [],
+    planIds: [],
+    draftIds: [],
+    exportJobIds: []
+  },
+  message: ""
+};
+
+function normalizeDifficulty(value: unknown): ContentOpportunity["estimatedDifficulty"] {
+  if (typeof value === "number") {
+    if (value >= 60) {
+      return "high";
+    }
+    if (value >= 40) {
+      return "medium";
+    }
+    return "low";
+  }
+
+  const normalized = String(value ?? "medium").toLowerCase();
+  if (normalized === "low" || normalized === "medium" || normalized === "high") {
+    return normalized;
+  }
+
+  return "medium";
+}
+
+function normalizeIntent(value: unknown): ContentOpportunity["intent"] {
+  const normalized = String(value ?? "informational").toLowerCase();
+  if (normalized === "commercial" || normalized === "comparison" || normalized === "local") {
+    return normalized;
+  }
+
+  return "informational";
+}
+
+function normalizePriority(value: unknown): ContentOpportunity["priority"] {
+  const normalized = String(value ?? "medium").toLowerCase();
+  if (normalized === "low" || normalized === "high") {
+    return normalized;
+  }
+
+  return "medium";
+}
+
+function normalizeExtractedData(value: unknown): ExtractedWebsiteData {
+  if (!value || typeof value !== "object") {
+    return defaultExtractedData;
+  }
+
+  const record = value as Record<string, unknown>;
+  const h2Headings = Array.isArray(record.h2Headings)
+    ? record.h2Headings.map((item) => String(item))
+    : Array.isArray(record.headings)
+      ? record.headings.map((item) => String(item))
+      : [];
+
+  return {
+    url: String(record.url ?? ""),
+    title: String(record.title ?? ""),
+    metaDescription: String(record.metaDescription ?? record.meta_description ?? ""),
+    h1: String(record.h1 ?? ""),
+    h2Headings,
+    mainTextContent: String(record.mainTextContent ?? record.contentExtract ?? record.content_extract ?? "")
+  };
+}
+
+function normalizeAutomationSummary(value: unknown): AutomationRunSummary {
+  if (typeof value === "string") {
+    return {
+      ...defaultAutomationSummary,
+      message: value
+    };
+  }
+
+  if (!value || typeof value !== "object") {
+    return defaultAutomationSummary;
+  }
+
+  const record = value as Record<string, unknown>;
+  const outputIds = record.outputIds as Record<string, unknown> | undefined;
+
+  return {
+    analysisCreated: Boolean(record.analysisCreated),
+    opportunitiesCreated: Number(record.opportunitiesCreated ?? 0),
+    plansCreated: Number(record.plansCreated ?? 0),
+    draftsCreated: Number(record.draftsCreated ?? 0),
+    exportsCreated: Number(record.exportsCreated ?? 0),
+    skippedItems: Number(record.skippedItems ?? 0),
+    errors: Array.isArray(record.errors) ? record.errors.map((item) => String(item)) : [],
+    outputIds: {
+      opportunityIds: Array.isArray(outputIds?.opportunityIds)
+        ? outputIds.opportunityIds.map((item) => String(item))
+        : [],
+      planIds: Array.isArray(outputIds?.planIds) ? outputIds.planIds.map((item) => String(item)) : [],
+      draftIds: Array.isArray(outputIds?.draftIds) ? outputIds.draftIds.map((item) => String(item)) : [],
+      exportJobIds: Array.isArray(outputIds?.exportJobIds)
+        ? outputIds.exportJobIds.map((item) => String(item))
+        : []
+    },
+    message: String(record.message ?? "")
+  };
+}
 
 export function mapWebsite(row: Row): Website {
   return {
@@ -45,11 +169,15 @@ export function mapWebsitePage(row: Row): WebsitePage {
 }
 
 export function mapAnalysisRun(row: Row): WebsiteAnalysisRun {
+  const extractedData = parseJsonArray<Record<string, unknown>>(String(row.extracted_data_json ?? "{}"), {});
+
   return {
     id: String(row.id),
     websiteId: String(row.website_id),
     nicheSummary: String(row.niche_summary),
     contentPillarsJson: parseJsonArray<string[]>(String(row.content_pillars_json ?? "[]"), []),
+    keywordsJson: parseJsonArray<string[]>(String(row.keywords_json ?? "[]"), []),
+    extractedDataJson: normalizeExtractedData(extractedData),
     analyzedPageCount: Number(row.analyzed_page_count),
     status: String(row.status) as WebsiteAnalysisRun["status"],
     createdAt: String(row.created_at)
@@ -71,11 +199,12 @@ export function mapOpportunity(row: Row): ContentOpportunity {
     id: String(row.id),
     websiteId: String(row.website_id),
     keyword: String(row.keyword),
+    topic: String(row.topic ?? row.keyword),
     cluster: String(row.cluster),
-    intent: String(row.intent),
+    intent: normalizeIntent(row.intent),
     relevanceScore: Number(row.relevance_score),
-    estimatedDifficulty: Number(row.estimated_difficulty),
-    priority: String(row.priority),
+    estimatedDifficulty: normalizeDifficulty(row.estimated_difficulty),
+    priority: normalizePriority(row.priority),
     source: String(row.source),
     status: String(row.status) as ContentOpportunity["status"],
     createdAt: String(row.created_at)
@@ -90,8 +219,8 @@ export function mapArticlePlan(row: Row): ArticlePlan {
     title: String(row.title),
     targetKeyword: String(row.target_keyword),
     secondaryKeywordsJson: parseJsonArray<string[]>(String(row.secondary_keywords_json ?? "[]"), []),
+    searchIntent: normalizeIntent(row.search_intent ?? row.intent),
     angle: String(row.angle),
-    intent: String(row.intent),
     cta: String(row.cta),
     brief: String(row.brief),
     status: String(row.status) as ArticlePlan["status"],
@@ -119,14 +248,18 @@ export function mapDraft(row: Row): Draft {
 }
 
 export function mapAutomationRun(row: Row): AutomationRun {
+  const rawSummary = String(row.output_summary ?? "");
+  const parsedSummary = parseJsonArray<unknown>(rawSummary, rawSummary);
+
   return {
     id: String(row.id),
     websiteId: String(row.website_id),
-    runType: String(row.run_type),
+    runType: String(row.run_type) as AutomationRun["runType"],
     status: String(row.status) as AutomationRun["status"],
     logsJson: parseJsonArray<string[]>(String(row.logs_json ?? "[]"), []),
-    outputSummary: String(row.output_summary),
-    createdAt: String(row.created_at)
+    outputSummary: normalizeAutomationSummary(parsedSummary),
+    createdAt: String(row.created_at),
+    updatedAt: String(row.updated_at ?? row.created_at)
   };
 }
 

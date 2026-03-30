@@ -1,14 +1,14 @@
 import { Router } from "express";
 import { ArticlePlanService } from "../services/articlePlanService";
 import { DraftService } from "../services/draftService";
-import { ExportService } from "../services/exportService";
+import { ExportJobService } from "../services/exportJobService";
 import { OpportunityService } from "../services/opportunityService";
 
 const router = Router();
 const opportunityService = new OpportunityService();
 const articlePlanService = new ArticlePlanService();
 const draftService = new DraftService();
-const exportService = new ExportService();
+const exportJobService = new ExportJobService();
 
 router.get("/opportunities", (request, response) => {
   const websiteId = typeof request.query.websiteId === "string" ? request.query.websiteId : undefined;
@@ -29,13 +29,42 @@ router.put("/opportunities/:id", (request, response) => {
   response.json(updated);
 });
 
+router.delete("/opportunities/:id", (request, response) => {
+  const deleted = opportunityService.deleteOpportunity(String(request.params.id));
+  if (!deleted) {
+    response.status(404).json({ message: "Opportunity not found." });
+    return;
+  }
+
+  response.status(204).send();
+});
+
 router.get("/plans", (request, response) => {
   const websiteId = typeof request.query.websiteId === "string" ? request.query.websiteId : undefined;
   response.json(articlePlanService.listPlans(websiteId));
 });
 
+router.get("/article-plans", (request, response) => {
+  const websiteId = typeof request.query.websiteId === "string" ? request.query.websiteId : undefined;
+  response.json(articlePlanService.listPlans(websiteId));
+});
+
+router.get("/article-plans/:id", (request, response) => {
+  const plan = articlePlanService.getPlan(String(request.params.id));
+  if (!plan) {
+    response.status(404).json({ message: "Article plan not found." });
+    return;
+  }
+
+  response.json(plan);
+});
+
 router.post("/opportunities/:id/generate-plan", (request, response) => {
-  response.status(201).json(articlePlanService.generateFromOpportunity(String(request.params.id)));
+  const result = articlePlanService.generateFromOpportunity(
+    String(request.params.id),
+    Boolean(request.body?.regenerate)
+  );
+  response.status(result.skipped || result.regenerated ? 200 : 201).json(result);
 });
 
 router.get("/drafts", (request, response) => {
@@ -53,8 +82,20 @@ router.get("/drafts/:id", (request, response) => {
   response.json(draft);
 });
 
+router.post("/article-plans/:id/generate-draft", (request, response) => {
+  const result = draftService.generateFromArticlePlan(
+    String(request.params.id),
+    Boolean(request.body?.regenerate)
+  );
+  response.status(result.skipped || result.regenerated ? 200 : 201).json(result);
+});
+
 router.post("/plans/:id/drafts", (request, response) => {
-  response.status(201).json(draftService.generateDraft(String(request.params.id)));
+  const result = draftService.generateFromArticlePlan(
+    String(request.params.id),
+    Boolean(request.body?.regenerate)
+  );
+  response.status(result.skipped || result.regenerated ? 200 : 201).json(result);
 });
 
 router.post("/drafts/:id/regenerate", (request, response) => {
@@ -67,11 +108,22 @@ router.post("/drafts/:id/mark-ready", (request, response) => {
 
 router.get("/exports", (request, response) => {
   const websiteId = typeof request.query.websiteId === "string" ? request.query.websiteId : undefined;
-  response.json(exportService.listExports(websiteId));
+  response.json(exportJobService.listExports(websiteId));
+});
+
+router.get("/exports/:id", (request, response) => {
+  const detail = exportJobService.getExport(String(request.params.id));
+  if (!detail) {
+    response.status(404).json({ message: "Export job not found." });
+    return;
+  }
+
+  response.json(detail);
 });
 
 router.post("/drafts/:id/export", (request, response) => {
-  response.status(201).json(exportService.createExport(String(request.params.id)));
+  const result = exportJobService.createExport(String(request.params.id), Boolean(request.body?.reexport));
+  response.status(result.skipped || result.regenerated ? 200 : 201).json(result);
 });
 
 export const contentRoutes = router;

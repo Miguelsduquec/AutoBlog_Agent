@@ -27,6 +27,7 @@ export class SeoAuditService {
         metaDescription: page.metaDescription,
         h1: page.h1,
         headings: page.headingsJson,
+        h2Headings: page.headingsJson,
         contentExtract: page.contentExtract,
         pageType: page.pageType
       }))

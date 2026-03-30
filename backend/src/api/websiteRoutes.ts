@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Request, Response, Router } from "express";
 import { WorkflowAgent } from "../agent/core/workflowAgent";
 import { AnalysisService } from "../services/analysisService";
 import { ArticlePlanService } from "../services/articlePlanService";
@@ -81,7 +81,11 @@ router.get("/:id/opportunities", (request, response) => {
 });
 
 router.post("/:id/opportunities/generate", (request, response) => {
-  response.json(opportunityService.generateForWebsite(String(request.params.id), Number(request.body?.limit ?? 8)));
+  response.json(opportunityService.generateFromLatestAnalysis(String(request.params.id), Number(request.body?.limit ?? 10)));
+});
+
+router.post("/:id/generate-opportunities", (request, response) => {
+  response.json(opportunityService.generateFromLatestAnalysis(String(request.params.id), Number(request.body?.limit ?? 10)));
 });
 
 router.post("/:id/plans/generate", (request, response) => {
@@ -92,15 +96,22 @@ router.post("/:id/drafts/generate", (request, response) => {
   response.json(draftService.generateDraftsForWebsite(String(request.params.id), Number(request.body?.limit ?? 3)));
 });
 
+async function handleAutomationRun(request: Request, response: Response) {
+  const run = await automationService.triggerRun(String(request.params.id), request.body);
+  response.status(201).json(run);
+}
+
+router.post(
+  "/:id/run-automation",
+  asyncHandler(async (request, response) => {
+    await handleAutomationRun(request, response);
+  })
+);
+
 router.post(
   "/:id/automation-runs/trigger",
   asyncHandler(async (request, response) => {
-    const run = await automationService.triggerRun(
-      String(request.params.id),
-      request.body?.runType ?? "manual-generation-run",
-      Number(request.body?.targetDraftCount ?? 2)
-    );
-    response.status(201).json(run);
+    await handleAutomationRun(request, response);
   })
 );
 

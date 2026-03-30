@@ -57,10 +57,10 @@ export function AnalysisPage() {
       ) : (
         <>
           <div className="grid-two">
-            <SectionCard title="Niche summary" description="Latest inferred niche and business focus.">
+            <SectionCard title="Niche summary and keywords" description="Latest mock-AI summary plus the strongest extracted keywords.">
               <p className="detail-summary">{latestAnalysis.nicheSummary}</p>
               <div className="pill-row">
-                {latestAnalysis.contentPillarsJson.map((pillar) => (
+                {(latestAnalysis.keywordsJson ?? latestAnalysis.contentPillarsJson).map((pillar) => (
                   <span className="mini-pill" key={pillar}>
                     {pillar}
                   </span>

@@ -3,8 +3,8 @@ import { createId } from "../utils/ids";
 
 type TopicTemplate = {
   cluster: string;
-  intent: string;
-  priority: string;
+  intent: ContentOpportunity["intent"];
+  priority: ContentOpportunity["priority"];
   keywords: string[];
 };
 
@@ -14,7 +14,7 @@ const TEMPLATE_LIBRARY: Array<{ match: string[]; topics: TopicTemplate[] }> = [
     topics: [
       {
         cluster: "Microsoft 365 adoption",
-        intent: "Informational",
+        intent: "informational",
         priority: "high",
         keywords: [
           "microsoft 365 migration checklist for small business",
@@ -24,7 +24,7 @@ const TEMPLATE_LIBRARY: Array<{ match: string[]; topics: TopicTemplate[] }> = [
       },
       {
         cluster: "Teams governance",
-        intent: "Commercial",
+        intent: "commercial",
         priority: "high",
         keywords: [
           "teams governance best practices",
@@ -38,7 +38,7 @@ const TEMPLATE_LIBRARY: Array<{ match: string[]; topics: TopicTemplate[] }> = [
     topics: [
       {
         cluster: "Month-end close",
-        intent: "Commercial",
+        intent: "commercial",
         priority: "high",
         keywords: [
           "month end close automation software",
@@ -48,7 +48,7 @@ const TEMPLATE_LIBRARY: Array<{ match: string[]; topics: TopicTemplate[] }> = [
       },
       {
         cluster: "Approvals",
-        intent: "Informational",
+        intent: "informational",
         priority: "medium",
         keywords: [
           "approval workflow for finance teams",
@@ -62,7 +62,7 @@ const TEMPLATE_LIBRARY: Array<{ match: string[]; topics: TopicTemplate[] }> = [
     topics: [
       {
         cluster: "Outdoor renovation",
-        intent: "Informational",
+        intent: "informational",
         priority: "high",
         keywords: [
           "garden renovation budget guide",
@@ -71,7 +71,7 @@ const TEMPLATE_LIBRARY: Array<{ match: string[]; topics: TopicTemplate[] }> = [
       },
       {
         cluster: "Patio planning",
-        intent: "Informational",
+        intent: "informational",
         priority: "medium",
         keywords: [
           "best patio materials for uk gardens",
@@ -123,10 +123,14 @@ export class TopicDiscoveryService {
           id: createId("opp"),
           websiteId: website.id,
           keyword,
+          topic: keyword
+            .split(" ")
+            .map((token) => token.charAt(0).toUpperCase() + token.slice(1))
+            .join(" "),
           cluster: topic.cluster,
           intent: topic.intent,
           relevanceScore: Math.min(97, 82 + opportunities.length * 2 + auditBoost),
-          estimatedDifficulty: 36 + opportunities.length * 5,
+          estimatedDifficulty: opportunities.length > 2 ? "medium" : "low",
           priority: topic.priority,
           source: audit ? "analysis-plus-audit" : "analysis",
           status: "new",
@@ -143,10 +147,11 @@ export class TopicDiscoveryService {
             id: createId("opp"),
             websiteId: website.id,
             keyword,
+            topic: `${pillar} Best Practices`,
             cluster: pillar,
-            intent: "Informational",
+            intent: "informational",
             relevanceScore: 78,
-            estimatedDifficulty: 44,
+            estimatedDifficulty: "medium",
             priority: "medium",
             source: "pillar-expansion",
             status: "new",

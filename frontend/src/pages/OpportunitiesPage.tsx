@@ -6,15 +6,16 @@ import { StatusBadge } from "../components/StatusBadge";
 import { WebsiteScopeHeader } from "../components/WebsiteScopeHeader";
 import { useAsyncData } from "../hooks/useAsyncData";
 import { useSelectedWebsite } from "../hooks/useSelectedWebsite";
-import { ContentOpportunity, OpportunityInput } from "../types";
+import { ContentOpportunity, OpportunityDifficulty, OpportunityInput, OpportunityIntent, OpportunityPriority } from "../types";
 
 const initialOpportunity = (websiteId: string): OpportunityInput => ({
   websiteId,
   keyword: "",
+  topic: "",
   cluster: "",
-  intent: "Informational",
+  intent: "informational",
   relevanceScore: 80,
-  estimatedDifficulty: 40,
+  estimatedDifficulty: "medium",
   priority: "medium",
   source: "manual",
   status: "new"
@@ -29,6 +30,11 @@ export function OpportunitiesPage() {
   );
   const [formState, setFormState] = useState<OpportunityInput>(initialOpportunity(""));
   const [editing, setEditing] = useState<ContentOpportunity | null>(null);
+  const [sourceFilter, setSourceFilter] = useState<string>("all");
+  const [generationMessage, setGenerationMessage] = useState<string>("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [planGenerationId, setPlanGenerationId] = useState<string>("");
+  const [planMessage, setPlanMessage] = useState<string>("");
 
   useEffect(() => {
     if (selectedWebsiteId) {
@@ -52,7 +58,27 @@ export function OpportunitiesPage() {
   }
 
   async function handleGeneratePlan(opportunityId: string) {
-    await api.generatePlanFromOpportunity(opportunityId);
+    setPlanGenerationId(opportunityId);
+    try {
+      const result = await api.generatePlanFromOpportunity(opportunityId);
+      setPlanMessage(result.summaryMessage);
+      await opportunitiesQuery.refresh();
+    } finally {
+      setPlanGenerationId("");
+    }
+  }
+
+  async function handleDelete(opportunity: ContentOpportunity) {
+    const confirmed = window.confirm(`Delete opportunity "${opportunity.keyword}"?`);
+    if (!confirmed) {
+      return;
+    }
+
+    await api.deleteOpportunity(opportunity.id);
+    if (editing?.id === opportunity.id) {
+      setEditing(null);
+      setFormState(initialOpportunity(selectedWebsiteId));
+    }
     await opportunitiesQuery.refresh();
   }
 
@@ -64,6 +90,12 @@ export function OpportunitiesPage() {
     return <div className="state-card error">Unable to load content opportunities.</div>;
   }
 
+  const sourceOptions = [...new Set(opportunitiesQuery.data.map((opportunity) => opportunity.source))];
+  const filteredOpportunities =
+    sourceFilter === "all"
+      ? opportunitiesQuery.data
+      : opportunitiesQuery.data.filter((opportunity) => opportunity.source === sourceFilter);
+
   return (
     <div className="page-stack">
       <WebsiteScopeHeader
@@ -74,16 +106,31 @@ export function OpportunitiesPage() {
         onSelectWebsite={setSelectedWebsiteId}
         actions={
           <>
+            <select value={sourceFilter} onChange={(event) => setSourceFilter(event.target.value)}>
+              <option value="all">All sources</option>
+              {sourceOptions.map((source) => (
+                <option key={source} value={source}>
+                  {source}
+                </option>
+              ))}
+            </select>
             <button
               className="button secondary"
+              disabled={!selectedWebsiteId || isGenerating}
               onClick={() =>
                 void (async () => {
-                  await api.generateOpportunities(selectedWebsiteId);
-                  await opportunitiesQuery.refresh();
+                  setIsGenerating(true);
+                  try {
+                    const result = await api.generateOpportunities(selectedWebsiteId, 10);
+                    setGenerationMessage(result.summaryMessage);
+                    await opportunitiesQuery.refresh();
+                  } finally {
+                    setIsGenerating(false);
+                  }
                 })()
               }
             >
-              Discover topics
+              {isGenerating ? "Generating…" : "Generate opportunities"}
             </button>
             <button
               className="button"
@@ -100,9 +147,12 @@ export function OpportunitiesPage() {
         }
       />
 
+      {generationMessage ? <div className="state-card">{generationMessage}</div> : null}
+      {planMessage ? <div className="state-card">{planMessage}</div> : null}
+
       <div className="grid-two wide-right">
         <SectionCard title="Opportunity queue" description="Keyword opportunities inferred from analysis, audits, and manual input.">
-          {opportunitiesQuery.data.length === 0 ? (
+          {filteredOpportunities.length === 0 ? (
             <EmptyState title="No opportunities yet" description="Run topic discovery or add one manually." />
           ) : (
             <table className="data-table">
@@ -114,20 +164,31 @@ export function OpportunitiesPage() {
                   <th>Relevance</th>
                   <th>Difficulty</th>
                   <th>Priority</th>
+                  <th>Source</th>
                   <th>Status</th>
                   <th />
                 </tr>
               </thead>
               <tbody>
-                {opportunitiesQuery.data.map((opportunity) => (
+                {filteredOpportunities.map((opportunity) => (
                   <tr key={opportunity.id}>
-                    <td>{opportunity.keyword}</td>
+                    <td>
+                      <strong>{opportunity.topic}</strong>
+                      <div className="table-subtext">{opportunity.keyword}</div>
+                    </td>
                     <td>{opportunity.cluster}</td>
-                    <td>{opportunity.intent}</td>
+                    <td>
+                      <StatusBadge value={opportunity.intent} />
+                    </td>
                     <td>{opportunity.relevanceScore}</td>
-                    <td>{opportunity.estimatedDifficulty}</td>
+                    <td>
+                      <StatusBadge value={opportunity.estimatedDifficulty} />
+                    </td>
                     <td>
                       <StatusBadge value={opportunity.priority} />
+                    </td>
+                    <td>
+                      <StatusBadge value={opportunity.source} />
                     </td>
                     <td>
                       <StatusBadge value={opportunity.status} />
@@ -140,6 +201,7 @@ export function OpportunitiesPage() {
                           setFormState({
                             websiteId: opportunity.websiteId,
                             keyword: opportunity.keyword,
+                            topic: opportunity.topic,
                             cluster: opportunity.cluster,
                             intent: opportunity.intent,
                             relevanceScore: opportunity.relevanceScore,
@@ -152,8 +214,15 @@ export function OpportunitiesPage() {
                       >
                         Edit
                       </button>
-                      <button className="link-button" onClick={() => void handleGeneratePlan(opportunity.id)}>
-                        Generate plan
+                      <button
+                        className="link-button"
+                        disabled={planGenerationId === opportunity.id}
+                        onClick={() => void handleGeneratePlan(opportunity.id)}
+                      >
+                        {planGenerationId === opportunity.id ? "Generating…" : "Generate plan"}
+                      </button>
+                      <button className="link-button destructive" onClick={() => void handleDelete(opportunity)}>
+                        Delete
                       </button>
                     </td>
                   </tr>
@@ -166,8 +235,12 @@ export function OpportunitiesPage() {
         <SectionCard title={editing ? "Edit opportunity" : "Add opportunity"} description="Manual curation is useful when operators know the niche better than the current template library.">
           <form className="form-grid" onSubmit={handleSubmit}>
             <label className="span-2">
-              Keyword / topic
+              Keyword
               <input value={formState.keyword} onChange={(event) => setFormState({ ...formState, keyword: event.target.value })} />
+            </label>
+            <label className="span-2">
+              Topic
+              <input value={formState.topic} onChange={(event) => setFormState({ ...formState, topic: event.target.value })} />
             </label>
             <label>
               Cluster
@@ -175,9 +248,11 @@ export function OpportunitiesPage() {
             </label>
             <label>
               Intent
-              <select value={formState.intent} onChange={(event) => setFormState({ ...formState, intent: event.target.value })}>
-                <option>Informational</option>
-                <option>Commercial</option>
+              <select value={formState.intent} onChange={(event) => setFormState({ ...formState, intent: event.target.value as OpportunityIntent })}>
+                <option value="informational">informational</option>
+                <option value="commercial">commercial</option>
+                <option value="comparison">comparison</option>
+                <option value="local">local</option>
               </select>
             </label>
             <label>
@@ -190,15 +265,21 @@ export function OpportunitiesPage() {
             </label>
             <label>
               Difficulty
-              <input
-                type="number"
+              <select
                 value={formState.estimatedDifficulty}
-                onChange={(event) => setFormState({ ...formState, estimatedDifficulty: Number(event.target.value) })}
-              />
+                onChange={(event) => setFormState({ ...formState, estimatedDifficulty: event.target.value as OpportunityDifficulty })}
+              >
+                <option value="low">low</option>
+                <option value="medium">medium</option>
+                <option value="high">high</option>
+              </select>
             </label>
             <label>
               Priority
-              <select value={formState.priority} onChange={(event) => setFormState({ ...formState, priority: event.target.value })}>
+              <select
+                value={formState.priority}
+                onChange={(event) => setFormState({ ...formState, priority: event.target.value as OpportunityPriority })}
+              >
                 <option>high</option>
                 <option>medium</option>
                 <option>low</option>

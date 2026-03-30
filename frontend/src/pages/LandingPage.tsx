@@ -1,22 +1,10 @@
 import { Link } from "react-router-dom";
+import { GlobalHeader } from "../components/GlobalHeader";
 
 export function LandingPage() {
   return (
     <div className="landing-page">
-      <header className="landing-nav">
-        <div className="landing-brand">
-          <span className="brand-mark">A</span>
-          <span>Autoblog Agent</span>
-        </div>
-        <div className="landing-nav-links">
-          <a href="#how-it-works">How it works</a>
-          <a href="#features">Features</a>
-          <a href="#pricing">Pricing</a>
-          <Link className="button secondary" to="/app/dashboard">
-            Open app
-          </Link>
-        </div>
-      </header>
+      <GlobalHeader />
 
       <section className="hero">
         <div className="hero-copy">

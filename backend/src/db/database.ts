@@ -16,4 +16,20 @@ for (const statement of schemaStatements) {
   sqlite.exec(statement);
 }
 
+function ensureColumn(tableName: string, columnName: string, definition: string): void {
+  const columns = sqlite
+    .prepare(`PRAGMA table_info(${tableName})`)
+    .all() as Array<{ name: string }>;
+
+  if (!columns.some((column) => column.name === columnName)) {
+    sqlite.exec(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${definition}`);
+  }
+}
+
+ensureColumn("website_analysis_runs", "keywords_json", "TEXT NOT NULL DEFAULT '[]'");
+ensureColumn("website_analysis_runs", "extracted_data_json", "TEXT NOT NULL DEFAULT '{}'");
+ensureColumn("content_opportunities", "topic", "TEXT NOT NULL DEFAULT ''");
+ensureColumn("article_plans", "search_intent", "TEXT NOT NULL DEFAULT 'informational'");
+ensureColumn("automation_runs", "updated_at", "TEXT NOT NULL DEFAULT ''");
+
 export const db = sqlite;
