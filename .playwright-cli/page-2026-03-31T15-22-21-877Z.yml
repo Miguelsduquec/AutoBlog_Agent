@@ -1,0 +1,200 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - link "A Autoblog Agent" [ref=e5] [cursor=pointer]:
+      - /url: /
+      - generic [ref=e6]: A
+      - generic [ref=e7]: Autoblog Agent
+    - generic [ref=e8]:
+      - link "How it works" [ref=e9] [cursor=pointer]:
+        - /url: /#how-it-works
+      - link "Features" [ref=e10] [cursor=pointer]:
+        - /url: /#features
+      - link "Free tool" [ref=e11] [cursor=pointer]:
+        - /url: /tools/content-gap-grader
+      - link "Pricing" [ref=e12] [cursor=pointer]:
+        - /url: /#pricing
+      - link "Open app" [ref=e13] [cursor=pointer]:
+        - /url: /app/dashboard
+  - generic [ref=e14]:
+    - generic [ref=e15]:
+      - generic [ref=e16]:
+        - text: Free report
+        - heading "Content Gap Grader results" [level=1] [ref=e17]
+        - paragraph [ref=e18]: Analyze a website, share the score, and turn the gap list into an Autoblog Agent workflow.
+      - generic [ref=e19]:
+        - generic [ref=e20]:
+          - generic [ref=e21]: Website URL
+          - textbox "Website URL" [ref=e22]:
+            - /placeholder: https://yourwebsite.com
+            - text: http://127.0.0.1:4010
+        - button "Run a new check" [ref=e23] [cursor=pointer]
+    - generic [ref=e24]:
+      - generic [ref=e25]:
+        - generic [ref=e26]:
+          - generic [ref=e27]:
+            - strong [ref=e28]: "48"
+            - generic [ref=e29]: D grade
+          - generic [ref=e30]:
+            - text: "127"
+            - heading "Wide open content foundation" [level=2] [ref=e31]
+            - paragraph [ref=e32]: The site shows low blog momentum and weak freshness signals, which suggests there is meaningful room to grow blog support content.
+            - generic [ref=e33]:
+              - generic [ref=e34]: 127.0.0.1
+              - generic [ref=e35]: 3 pages analyzed
+              - generic [ref=e36]: 8 extracted keywords
+        - generic [ref=e37]:
+          - button "Share score" [ref=e38] [cursor=pointer]
+          - button "Copy link" [ref=e39] [cursor=pointer]
+          - link "Upgrade to Autoblog Agent" [ref=e40] [cursor=pointer]:
+            - /url: /app/dashboard
+      - generic [ref=e41]:
+        - article [ref=e42]:
+          - generic [ref=e43]: Content Coverage Score
+          - generic [ref=e44]: "79"
+          - generic [ref=e45]: How much educational support content the site appears to have.
+        - article [ref=e46]:
+          - generic [ref=e47]: Blog Momentum Score
+          - generic [ref=e48]: "29"
+          - generic [ref=e49]: Whether the site looks like it is publishing consistently or standing still.
+        - article [ref=e50]:
+          - generic [ref=e51]: Topic Gap Count
+          - generic [ref=e52]: "12"
+          - generic [ref=e53]: Estimated number of clear article opportunities still missing.
+        - article [ref=e54]:
+          - generic [ref=e55]: Commercial Intent Coverage
+          - generic [ref=e56]: "60"
+          - generic [ref=e57]: How well the site connects content to real buying and service intent.
+        - article [ref=e58]:
+          - generic [ref=e59]: Freshness Score
+          - generic [ref=e60]: "18"
+          - generic [ref=e61]: Signals that suggest the site is still expanding and updating its content.
+      - generic [ref=e62]:
+        - generic [ref=e63]:
+          - generic [ref=e65]:
+            - text: What we saw
+            - heading "Website readout" [level=2] [ref=e66]
+          - paragraph [ref=e67]: 127 appears to be focused on bookkeeping and related topics for Global. The homepage messaging emphasizes bookkeeping support for local businesses, while the supporting sections cover monthly bookkeeping, cash flow visibility.
+          - generic [ref=e68]:
+            - generic [ref=e69]: bookkeeping
+            - generic [ref=e70]: local
+            - generic [ref=e71]: businesses
+            - generic [ref=e72]: northstar
+            - generic [ref=e73]: support
+            - generic [ref=e74]: monthly
+            - generic [ref=e75]: cash
+            - generic [ref=e76]: flow
+          - generic [ref=e77]:
+            - article [ref=e78]:
+              - generic [ref=e79]:
+                - strong [ref=e80]: Northstar Bookkeeping | Bookkeeping for local businesses
+                - generic [ref=e81]: homepage
+              - paragraph [ref=e82]: http://127.0.0.1:4010/
+            - article [ref=e83]:
+              - generic [ref=e84]:
+                - strong [ref=e85]: About Northstar Bookkeeping
+                - generic [ref=e86]: about
+              - paragraph [ref=e87]: http://127.0.0.1:4010/about
+            - article [ref=e88]:
+              - generic [ref=e89]:
+                - strong [ref=e90]: Bookkeeping services | Northstar
+                - generic [ref=e91]: service
+              - paragraph [ref=e92]: http://127.0.0.1:4010/services
+        - generic [ref=e93]:
+          - generic [ref=e95]:
+            - text: Top 5 missing opportunities
+            - heading "Where coverage is most obviously missing" [level=2] [ref=e96]
+          - generic [ref=e97]:
+            - article [ref=e98]:
+              - generic [ref=e99]:
+                - strong [ref=e100]: Bookkeeping in Global
+                - generic [ref=e101]:
+                  - generic [ref=e102]: local
+                  - generic [ref=e103]: high
+              - paragraph [ref=e104]: Local intent terms can strengthen trust and capture demand in the markets this site serves.
+              - generic [ref=e105]:
+                - generic [ref=e106]: "Keyword: bookkeeping in Global"
+                - generic [ref=e107]: "Cluster: Bookkeeping"
+                - generic [ref=e108]: "Relevance: 98"
+            - article [ref=e109]:
+              - generic [ref=e110]:
+                - strong [ref=e111]: Bookkeeping for Buyers
+                - generic [ref=e112]:
+                  - generic [ref=e113]: commercial
+                  - generic [ref=e114]: high
+              - paragraph [ref=e115]: Commercial research terms like this often connect educational traffic to real buying conversations.
+              - generic [ref=e116]:
+                - generic [ref=e117]: "Keyword: bookkeeping for buyers"
+                - generic [ref=e118]: "Cluster: Bookkeeping"
+                - generic [ref=e119]: "Relevance: 98"
+            - article [ref=e120]:
+              - generic [ref=e121]:
+                - strong [ref=e122]: Best Bookkeeping
+                - generic [ref=e123]:
+                  - generic [ref=e124]: commercial
+                  - generic [ref=e125]: high
+              - paragraph [ref=e126]: Commercial research terms like this often connect educational traffic to real buying conversations.
+              - generic [ref=e127]:
+                - generic [ref=e128]: "Keyword: best bookkeeping"
+                - generic [ref=e129]: "Cluster: Bookkeeping"
+                - generic [ref=e130]: "Relevance: 98"
+            - article [ref=e131]:
+              - generic [ref=e132]:
+                - strong [ref=e133]: Bookkeeping Cost Guide
+                - generic [ref=e134]:
+                  - generic [ref=e135]: commercial
+                  - generic [ref=e136]: high
+              - paragraph [ref=e137]: Commercial research terms like this often connect educational traffic to real buying conversations.
+              - generic [ref=e138]:
+                - generic [ref=e139]: "Keyword: bookkeeping cost"
+                - generic [ref=e140]: "Cluster: Bookkeeping"
+                - generic [ref=e141]: "Relevance: 98"
+            - article [ref=e142]:
+              - generic [ref=e143]:
+                - strong [ref=e144]: Best Local
+                - generic [ref=e145]:
+                  - generic [ref=e146]: commercial
+                  - generic [ref=e147]: high
+              - paragraph [ref=e148]: Commercial research terms like this often connect educational traffic to real buying conversations.
+              - generic [ref=e149]:
+                - generic [ref=e150]: "Keyword: best local"
+                - generic [ref=e151]: "Cluster: Local"
+                - generic [ref=e152]: "Relevance: 89"
+      - generic [ref=e153]:
+        - generic [ref=e155]:
+          - text: Top 3 quick wins
+          - heading "Article ideas you could act on first" [level=2] [ref=e156]
+        - generic [ref=e157]:
+          - article [ref=e158]:
+            - generic [ref=e159]:
+              - strong [ref=e160]: Bookkeeping in Global
+              - generic [ref=e161]: low
+            - paragraph [ref=e162]: Low difficulty and strong relevance make this a practical first article to publish.
+            - generic [ref=e163]:
+              - generic [ref=e164]: local
+              - generic [ref=e165]: high priority
+          - article [ref=e166]:
+            - generic [ref=e167]:
+              - strong [ref=e168]: Bookkeeping for Buyers
+              - generic [ref=e169]: medium
+            - paragraph [ref=e170]: This topic sits close to buying intent and can create faster business value.
+            - generic [ref=e171]:
+              - generic [ref=e172]: commercial
+              - generic [ref=e173]: high priority
+          - article [ref=e174]:
+            - generic [ref=e175]:
+              - strong [ref=e176]: Best Bookkeeping
+              - generic [ref=e177]: high
+            - paragraph [ref=e178]: This topic sits close to buying intent and can create faster business value.
+            - generic [ref=e179]:
+              - generic [ref=e180]: commercial
+              - generic [ref=e181]: high priority
+      - generic [ref=e182]:
+        - generic [ref=e183]:
+          - text: Autoblog Agent
+          - heading "Want to fix these gaps automatically?" [level=2] [ref=e184]
+          - paragraph [ref=e185]: Generate article plans and drafts with Autoblog Agent instead of managing the content workflow by hand.
+        - generic [ref=e186]:
+          - link "Generate plans and drafts" [ref=e187] [cursor=pointer]:
+            - /url: /app/dashboard
+          - link "Run another website" [ref=e188] [cursor=pointer]:
+            - /url: /tools/content-gap-grader

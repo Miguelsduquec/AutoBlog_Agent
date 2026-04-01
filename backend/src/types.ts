@@ -14,6 +14,7 @@ export type AutomationStatus = "queued" | "running" | "completed" | "failed" | "
 export type OpportunityIntent = "informational" | "commercial" | "comparison" | "local";
 export type OpportunityPriority = "low" | "medium" | "high";
 export type OpportunityDifficulty = "low" | "medium" | "high";
+export type AnalysisConfidenceLevel = "low" | "medium" | "high";
 
 export interface Website {
   id: string;
@@ -50,6 +51,8 @@ export interface WebsiteAnalysisRun {
   keywordsJson: string[];
   extractedDataJson: ExtractedWebsiteData;
   analyzedPageCount: number;
+  confidenceLevel: AnalysisConfidenceLevel;
+  confidenceScore: number;
   status: WorkflowStatus;
   createdAt: string;
 }
@@ -61,6 +64,15 @@ export interface ExtractedWebsiteData {
   h1: string;
   h2Headings: string[];
   mainTextContent: string;
+  pageSignals: Array<{
+    url: string;
+    title: string;
+    h1: string;
+    pageType: string;
+    h2Headings: string[];
+    contentExtract: string;
+    isFallback?: boolean;
+  }>;
 }
 
 export interface SeoFinding {
@@ -238,4 +250,48 @@ export interface CrawlResultPage {
   h2Headings: string[];
   contentExtract: string;
   pageType: string;
+  isFallback?: boolean;
+}
+
+export interface ContentGapIdea {
+  keyword: string;
+  topic: string;
+  cluster: string;
+  intent: OpportunityIntent;
+  priority: OpportunityPriority;
+  relevanceScore: number;
+  estimatedDifficulty: OpportunityDifficulty;
+  whyItMatters: string;
+}
+
+export interface ContentGapGraderScores {
+  overallScore: number;
+  gradeLabel: string;
+  contentCoverageScore: number;
+  blogMomentumScore: number;
+  topicGapCount: number;
+  commercialIntentCoverage: number;
+  freshnessScore: number;
+}
+
+export interface ContentGapGraderReport {
+  websiteUrl: string;
+  hostname: string;
+  websiteName: string;
+  nicheSummary: string;
+  overview: string;
+  extractedKeywords: string[];
+  analyzedPageCount: number;
+  analysisConfidenceLevel: AnalysisConfidenceLevel;
+  analysisConfidenceScore: number;
+  analyzedPages: Array<{
+    url: string;
+    title: string;
+    pageType: string;
+  }>;
+  scores: ContentGapGraderScores;
+  topMissingOpportunities: ContentGapIdea[];
+  quickWinIdeas: ContentGapIdea[];
+  generatedAt: string;
+  shareMessage: string;
 }

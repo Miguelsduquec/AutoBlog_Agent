@@ -214,9 +214,12 @@ export function getSeedData(): {
         h1: "Microsoft consulting that helps teams work better",
         h2Headings: ["Microsoft 365 consulting", "Teams phone deployment", "SharePoint intranet delivery"],
         mainTextContent:
-          "Polped helps businesses adopt Microsoft 365, improve collaboration, modernize workflows, and strengthen security."
+          "Polped helps businesses adopt Microsoft 365, improve collaboration, modernize workflows, and strengthen security.",
+        pageSignals: []
       },
       analyzedPageCount: 3,
+      confidenceLevel: "high",
+      confidenceScore: 84,
       status: "analyzed",
       createdAt: daysAgo(8)
     },
@@ -234,9 +237,12 @@ export function getSeedData(): {
         h1: "Finance operations software for lean teams",
         h2Headings: ["Automated close", "Approval workflows", "Real-time finance dashboards"],
         mainTextContent:
-          "Finnova Ops helps finance teams reduce manual close work, centralize requests, and improve visibility."
+          "Finnova Ops helps finance teams reduce manual close work, centralize requests, and improve visibility.",
+        pageSignals: []
       },
       analyzedPageCount: 3,
+      confidenceLevel: "high",
+      confidenceScore: 82,
       status: "analyzed",
       createdAt: daysAgo(6)
     },
@@ -254,9 +260,12 @@ export function getSeedData(): {
         h1: "Outdoor spaces designed to be lived in",
         h2Headings: ["Landscape design", "Patios and paving", "Garden renovation"],
         mainTextContent:
-          "Greenforge creates outdoor living spaces with a focus on design, materials, planting, and long-term maintenance."
+          "Greenforge creates outdoor living spaces with a focus on design, materials, planting, and long-term maintenance.",
+        pageSignals: []
       },
       analyzedPageCount: 3,
+      confidenceLevel: "medium",
+      confidenceScore: 68,
       status: "analyzed",
       createdAt: daysAgo(5)
     }

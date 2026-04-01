@@ -84,7 +84,8 @@ docs/       Product, architecture, and roadmap notes
 
 ## Notes
 
-- The backend seeds demo data automatically on first run and also supports manual reseeding via `npm run seed`.
+- The backend no longer seeds demo data automatically on boot. Seed explicitly with `npm run seed`.
+- If you want demo-style auto-seeding for a temporary environment, set `SEED_ON_BOOT=true`.
 - The crawler, website analysis, opportunity generation, article planning, draft generation, automation orchestration, and export services are modular mock implementations so real AI providers or CMS integrations can replace them later without changing the product workflow.
 - Export packages are written to `backend/output`.
 - Automation runs are synchronous in this MVP and are intentionally structured so queues or background workers can be added later.

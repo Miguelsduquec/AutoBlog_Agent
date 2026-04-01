@@ -3,11 +3,32 @@ import { draftRepository, opportunityRepository } from "../repositories/contentR
 import { websitePageRepository, websiteRepository } from "../repositories/websiteRepository";
 import { Website, WebsiteDetail } from "../types";
 import { createId } from "../utils/ids";
+import { HttpError } from "../utils/errors";
+import { normalizeHttpUrl } from "../utils/url";
 
 type WebsiteInput = Pick<
   Website,
   "name" | "domain" | "language" | "targetCountry" | "niche" | "tone" | "contentGoal" | "publishingFrequency"
 >;
+
+function normalizeWebsiteInput(input: WebsiteInput): WebsiteInput {
+  const name = input.name.trim();
+  if (!name) {
+    throw new HttpError(400, "Website name is required.");
+  }
+
+  return {
+    ...input,
+    name,
+    domain: normalizeHttpUrl(input.domain),
+    language: input.language.trim() || "English",
+    targetCountry: input.targetCountry.trim() || "Global",
+    niche: input.niche.trim(),
+    tone: input.tone.trim(),
+    contentGoal: input.contentGoal.trim(),
+    publishingFrequency: input.publishingFrequency.trim() || "Weekly"
+  };
+}
 
 export class WebsiteService {
   listWebsites(): Website[] {
@@ -32,9 +53,10 @@ export class WebsiteService {
 
   createWebsite(input: WebsiteInput): Website {
     const now = new Date().toISOString();
+    const normalizedInput = normalizeWebsiteInput(input);
     const website: Website = {
       id: createId("site"),
-      ...input,
+      ...normalizedInput,
       createdAt: now,
       updatedAt: now
     };
@@ -48,9 +70,11 @@ export class WebsiteService {
       return null;
     }
 
+    const normalizedInput = normalizeWebsiteInput(input);
+
     const updated: Website = {
       ...existing,
-      ...input,
+      ...normalizedInput,
       updatedAt: new Date().toISOString()
     };
 

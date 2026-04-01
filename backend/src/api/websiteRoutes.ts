@@ -2,7 +2,7 @@ import { Request, Response, Router } from "express";
 import { WorkflowAgent } from "../agent/core/workflowAgent";
 import { AnalysisService } from "../services/analysisService";
 import { ArticlePlanService } from "../services/articlePlanService";
-import { AutomationService } from "../services/automationService";
+import { AutomationRunService } from "../services/automationRunService";
 import { DraftService } from "../services/draftService";
 import { OpportunityService } from "../services/opportunityService";
 import { SeoAuditService } from "../services/seoAuditService";
@@ -16,7 +16,7 @@ const seoAuditService = new SeoAuditService();
 const opportunityService = new OpportunityService();
 const articlePlanService = new ArticlePlanService();
 const draftService = new DraftService();
-const automationService = new AutomationService();
+const automationRunService = new AutomationRunService();
 const workflowAgent = new WorkflowAgent();
 
 router.get("/", (_request, response) => {
@@ -80,10 +80,6 @@ router.get("/:id/opportunities", (request, response) => {
   response.json(opportunityService.listOpportunities(String(request.params.id)));
 });
 
-router.post("/:id/opportunities/generate", (request, response) => {
-  response.json(opportunityService.generateFromLatestAnalysis(String(request.params.id), Number(request.body?.limit ?? 10)));
-});
-
 router.post("/:id/generate-opportunities", (request, response) => {
   response.json(opportunityService.generateFromLatestAnalysis(String(request.params.id), Number(request.body?.limit ?? 10)));
 });
@@ -97,19 +93,12 @@ router.post("/:id/drafts/generate", (request, response) => {
 });
 
 async function handleAutomationRun(request: Request, response: Response) {
-  const run = await automationService.triggerRun(String(request.params.id), request.body);
+  const run = await automationRunService.triggerRun(String(request.params.id), request.body);
   response.status(201).json(run);
 }
 
 router.post(
   "/:id/run-automation",
-  asyncHandler(async (request, response) => {
-    await handleAutomationRun(request, response);
-  })
-);
-
-router.post(
-  "/:id/automation-runs/trigger",
   asyncHandler(async (request, response) => {
     await handleAutomationRun(request, response);
   })

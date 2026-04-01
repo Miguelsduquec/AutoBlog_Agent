@@ -1,5 +1,6 @@
 import {
   ArticlePlan,
+  ContentGapGraderReport,
   AutomationRun,
   AutomationRunRequest,
   ContentOpportunity,
@@ -144,5 +145,10 @@ export const api = {
   createExport: (draftId: string) =>
     request<ExportGenerationResult>(`/drafts/${draftId}/export`, {
       method: "POST"
+    }),
+  gradeContentGaps: (url: string) =>
+    request<ContentGapGraderReport>("/tools/content-gap-grader", {
+      method: "POST",
+      body: JSON.stringify({ url })
     })
 };

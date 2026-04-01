@@ -1,0 +1,200 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - link "A Autoblog Agent" [ref=e5] [cursor=pointer]:
+      - /url: /
+      - generic [ref=e6]: A
+      - generic [ref=e7]: Autoblog Agent
+    - generic [ref=e8]:
+      - link "How it works" [ref=e9] [cursor=pointer]:
+        - /url: /#how-it-works
+      - link "Features" [ref=e10] [cursor=pointer]:
+        - /url: /#features
+      - link "Free tool" [ref=e11] [cursor=pointer]:
+        - /url: /tools/content-gap-grader
+      - link "Pricing" [ref=e12] [cursor=pointer]:
+        - /url: /#pricing
+      - link "Open app" [ref=e13] [cursor=pointer]:
+        - /url: /app/dashboard
+  - generic [ref=e14]:
+    - complementary [ref=e15]:
+      - generic [ref=e16]:
+        - generic [ref=e17]: A
+        - generic [ref=e18]:
+          - generic [ref=e19]: Autoblog Agent
+          - generic [ref=e20]: SEO automation operations
+      - navigation [ref=e21]:
+        - link "Dashboard" [ref=e22] [cursor=pointer]:
+          - /url: /app/dashboard
+        - link "Websites" [ref=e23] [cursor=pointer]:
+          - /url: /app/websites
+        - link "Analysis" [ref=e24] [cursor=pointer]:
+          - /url: /app/analysis
+        - link "Opportunities" [ref=e25] [cursor=pointer]:
+          - /url: /app/opportunities
+        - link "Plans" [ref=e26] [cursor=pointer]:
+          - /url: /app/plans
+        - link "Drafts" [ref=e27] [cursor=pointer]:
+          - /url: /app/drafts
+        - link "Automation" [ref=e28] [cursor=pointer]:
+          - /url: /app/automation-runs
+        - link "Exports" [ref=e29] [cursor=pointer]:
+          - /url: /app/exports
+      - generic [ref=e30]:
+        - generic [ref=e31]: Human review gate
+        - strong [ref=e32]: Enabled before export
+    - generic [ref=e33]:
+      - banner [ref=e34]:
+        - generic [ref=e35]:
+          - generic [ref=e36]: Operational workflow
+          - heading "Websites" [level=1] [ref=e37]
+        - generic [ref=e38]:
+          - generic [ref=e39]: Automatic generation
+          - generic [ref=e40]: Review before publishing
+      - main [ref=e41]:
+        - generic [ref=e42]:
+          - generic [ref=e43]:
+            - generic [ref=e44]:
+              - heading "Website portfolio" [level=1] [ref=e45]
+              - paragraph [ref=e46]: Manually add websites, define the content strategy context, and open each workflow from one list.
+            - generic [ref=e47]: 7 websites
+          - generic [ref=e48]:
+            - generic [ref=e49]:
+              - generic [ref=e51]:
+                - heading "Tracked websites" [level=2] [ref=e52]
+                - paragraph [ref=e53]: Each website becomes its own analysis, opportunity, and drafting workspace.
+              - table [ref=e55]:
+                - rowgroup [ref=e56]:
+                  - row "Website Domain Market Niche Publishing Updated" [ref=e57]:
+                    - columnheader "Website" [ref=e58]
+                    - columnheader "Domain" [ref=e59]
+                    - columnheader "Market" [ref=e60]
+                    - columnheader "Niche" [ref=e61]
+                    - columnheader "Publishing" [ref=e62]
+                    - columnheader "Updated" [ref=e63]
+                    - columnheader [ref=e64]
+                - rowgroup [ref=e65]:
+                  - row "Slow Lane Systems http://127.0.0.1:4015 English • Global Workflow consulting Weekly 31 Mar 2026, 16:20 Edit Delete" [ref=e66]:
+                    - cell "Slow Lane Systems" [ref=e67]:
+                      - link "Slow Lane Systems" [ref=e68] [cursor=pointer]:
+                        - /url: /app/websites/site-1774970396791-7w24y0
+                    - cell "http://127.0.0.1:4015" [ref=e69]
+                    - cell "English • Global" [ref=e70]
+                    - cell "Workflow consulting" [ref=e71]
+                    - cell "Weekly" [ref=e72]:
+                      - generic [ref=e73]: Weekly
+                    - cell "31 Mar 2026, 16:20" [ref=e74]
+                    - cell "Edit Delete" [ref=e75]:
+                      - button "Edit" [ref=e76] [cursor=pointer]
+                      - button "Delete" [ref=e77] [cursor=pointer]
+                  - row "Broken URL Co notaurl English • Global Consulting Weekly 31 Mar 2026, 16:19 Edit Delete" [ref=e78]:
+                    - cell "Broken URL Co" [ref=e79]:
+                      - link "Broken URL Co" [ref=e80] [cursor=pointer]:
+                        - /url: /app/websites/site-1774970396758-c03dtk
+                    - cell "notaurl" [ref=e81]
+                    - cell "English • Global" [ref=e82]
+                    - cell "Consulting" [ref=e83]
+                    - cell "Weekly" [ref=e84]:
+                      - generic [ref=e85]: Weekly
+                    - cell "31 Mar 2026, 16:19" [ref=e86]
+                    - cell "Edit Delete" [ref=e87]:
+                      - button "Edit" [ref=e88] [cursor=pointer]
+                      - button "Delete" [ref=e89] [cursor=pointer]
+                  - row "Empty Site http://127.0.0.1:4013 English • Global Operations consulting Weekly 31 Mar 2026, 16:19 Edit Delete" [ref=e90]:
+                    - cell "Empty Site" [ref=e91]:
+                      - link "Empty Site" [ref=e92] [cursor=pointer]:
+                        - /url: /app/websites/site-1774970396770-oqeuwp
+                    - cell "http://127.0.0.1:4013" [ref=e93]
+                    - cell "English • Global" [ref=e94]
+                    - cell "Operations consulting" [ref=e95]
+                    - cell "Weekly" [ref=e96]:
+                      - generic [ref=e97]: Weekly
+                    - cell "31 Mar 2026, 16:19" [ref=e98]
+                    - cell "Edit Delete" [ref=e99]:
+                      - button "Edit" [ref=e100] [cursor=pointer]
+                      - button "Delete" [ref=e101] [cursor=pointer]
+                  - row "Signal Stack http://127.0.0.1:4014 English • Global Workflow support Weekly 31 Mar 2026, 16:19 Edit Delete" [ref=e102]:
+                    - cell "Signal Stack" [ref=e103]:
+                      - link "Signal Stack" [ref=e104] [cursor=pointer]:
+                        - /url: /app/websites/site-1774970396782-ncmr6q
+                    - cell "http://127.0.0.1:4014" [ref=e105]
+                    - cell "English • Global" [ref=e106]
+                    - cell "Workflow support" [ref=e107]
+                    - cell "Weekly" [ref=e108]:
+                      - generic [ref=e109]: Weekly
+                    - cell "31 Mar 2026, 16:19" [ref=e110]
+                    - cell "Edit Delete" [ref=e111]:
+                      - button "Edit" [ref=e112] [cursor=pointer]
+                      - button "Delete" [ref=e113] [cursor=pointer]
+                  - row "Northstar Bookkeeping http://127.0.0.1:4010 English • United Kingdom Bookkeeping services Weekly 31 Mar 2026, 16:19 Edit Delete" [ref=e114]:
+                    - cell "Northstar Bookkeeping" [ref=e115]:
+                      - link "Northstar Bookkeeping" [ref=e116] [cursor=pointer]:
+                        - /url: /app/websites/site-1774970391639-7gdy63
+                    - cell "http://127.0.0.1:4010" [ref=e117]
+                    - cell "English • United Kingdom" [ref=e118]
+                    - cell "Bookkeeping services" [ref=e119]
+                    - cell "Weekly" [ref=e120]:
+                      - generic [ref=e121]: Weekly
+                    - cell "31 Mar 2026, 16:19" [ref=e122]
+                    - cell "Edit Delete" [ref=e123]:
+                      - button "Edit" [ref=e124] [cursor=pointer]
+                      - button "Delete" [ref=e125] [cursor=pointer]
+                  - row "Workflow Atlas http://127.0.0.1:4011 English • United States Operations consulting Twice per week 31 Mar 2026, 16:19 Edit Delete" [ref=e126]:
+                    - cell "Workflow Atlas" [ref=e127]:
+                      - link "Workflow Atlas" [ref=e128] [cursor=pointer]:
+                        - /url: /app/websites/site-1774970391674-4lzt4x
+                    - cell "http://127.0.0.1:4011" [ref=e129]
+                    - cell "English • United States" [ref=e130]
+                    - cell "Operations consulting" [ref=e131]
+                    - cell "Twice per week" [ref=e132]:
+                      - generic [ref=e133]: Twice per week
+                    - cell "31 Mar 2026, 16:19" [ref=e134]
+                    - cell "Edit Delete" [ref=e135]:
+                      - button "Edit" [ref=e136] [cursor=pointer]
+                      - button "Delete" [ref=e137] [cursor=pointer]
+                  - row "Apex Growth http://127.0.0.1:4012 English • Global Growth consulting Monthly 31 Mar 2026, 16:19 Edit Delete" [ref=e138]:
+                    - cell "Apex Growth" [ref=e139]:
+                      - link "Apex Growth" [ref=e140] [cursor=pointer]:
+                        - /url: /app/websites/site-1774970391693-ijzvho
+                    - cell "http://127.0.0.1:4012" [ref=e141]
+                    - cell "English • Global" [ref=e142]
+                    - cell "Growth consulting" [ref=e143]
+                    - cell "Monthly" [ref=e144]:
+                      - generic [ref=e145]: Monthly
+                    - cell "31 Mar 2026, 16:19" [ref=e146]
+                    - cell "Edit Delete" [ref=e147]:
+                      - button "Edit" [ref=e148] [cursor=pointer]
+                      - button "Delete" [ref=e149] [cursor=pointer]
+            - generic [ref=e150]:
+              - generic [ref=e152]:
+                - heading "Add website" [level=2] [ref=e153]
+                - paragraph [ref=e154]: The first version keeps setup manual so the website context is explicit and reliable.
+              - generic [ref=e156]:
+                - generic [ref=e157]:
+                  - text: Website name
+                  - textbox "Website name" [ref=e158]
+                - generic [ref=e159]:
+                  - text: Domain
+                  - textbox "Domain" [ref=e160]
+                - generic [ref=e161]:
+                  - text: Language
+                  - textbox "Language" [ref=e162]: English
+                - generic [ref=e163]:
+                  - text: Target country
+                  - textbox "Target country" [ref=e164]: United States
+                - generic [ref=e165]:
+                  - text: Niche or business type
+                  - textbox "Niche or business type" [ref=e166]
+                - generic [ref=e167]:
+                  - text: Brand tone
+                  - textbox "Brand tone" [ref=e168]
+                - generic [ref=e169]:
+                  - text: Content goal
+                  - textbox "Content goal" [ref=e170]
+                - generic [ref=e171]:
+                  - text: Publishing frequency
+                  - combobox "Publishing frequency" [ref=e172]:
+                    - option "Weekly" [selected]
+                    - option "Twice per week"
+                    - option "Bi-weekly"
+                    - option "Monthly"
+                - button "Add website" [ref=e174] [cursor=pointer]

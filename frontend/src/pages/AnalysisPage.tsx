@@ -1,6 +1,7 @@
 import { api } from "../api/client";
 import { EmptyState } from "../components/EmptyState";
 import { SectionCard } from "../components/SectionCard";
+import { StatusBadge } from "../components/StatusBadge";
 import { WebsiteScopeHeader } from "../components/WebsiteScopeHeader";
 import { useAsyncData } from "../hooks/useAsyncData";
 import { useSelectedWebsite } from "../hooks/useSelectedWebsite";
@@ -74,6 +75,12 @@ export function AnalysisPage() {
                   <span>{latestAnalysis.analyzedPageCount}</span>
                 </div>
                 <div>
+                  <strong>Confidence</strong>
+                  <span>
+                    <StatusBadge value={latestAnalysis.confidenceLevel} /> {latestAnalysis.confidenceScore}/100
+                  </span>
+                </div>
+                <div>
                   <strong>Latest run</strong>
                   <span>{formatDate(latestAnalysis.createdAt)}</span>
                 </div>
@@ -84,6 +91,17 @@ export function AnalysisPage() {
               </div>
             </SectionCard>
           </div>
+
+          {latestAnalysis.confidenceLevel !== "high" ? (
+            <div className={`state-card ${latestAnalysis.confidenceLevel === "low" ? "warning" : ""}`}>
+              <strong>{latestAnalysis.confidenceLevel === "low" ? "Low-confidence analysis" : "Medium-confidence analysis"}</strong>
+              <p>
+                {latestAnalysis.confidenceLevel === "low"
+                  ? "The crawler found limited usable structure or content. Re-run analysis after checking the URL or website depth before generating opportunities."
+                  : "The website exposed a partial content profile. Opportunity generation is still available, but outputs should be reviewed more carefully."}
+              </p>
+            </div>
+          ) : null}
 
           <SectionCard title="Analyzed pages" description="Visible page signals extracted by the MVP crawler.">
             <table className="data-table">

@@ -409,6 +409,288 @@ button {
   padding: 24px 0 64px;
 }
 
+.grader-page {
+  min-height: 100vh;
+  padding: 32px;
+}
+
+.grader-hero,
+.grader-section,
+.grader-upsell,
+.grader-results-shell {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.grader-hero {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 36px;
+  align-items: center;
+  padding: 48px 0 56px;
+}
+
+.grader-hero-copy h1,
+.grader-results-top h1 {
+  margin: 12px 0;
+  line-height: 1.06;
+}
+
+.grader-hero-copy h1 {
+  font-size: clamp(2.8rem, 5vw, 4.8rem);
+  max-width: 10.5ch;
+}
+
+.grader-hero-copy p,
+.grader-preview-copy p,
+.grader-feature p,
+.grader-score-card p,
+.grader-loading-copy p,
+.grader-score-summary p,
+.grader-quickwin-card p {
+  color: var(--muted);
+}
+
+.grader-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: end;
+  margin: 28px 0 16px;
+}
+
+.grader-form.compact {
+  margin: 0;
+  min-width: min(540px, 100%);
+}
+
+.grader-input-wrap {
+  display: grid;
+  gap: 8px;
+}
+
+.grader-proof-row,
+.grader-preview-list,
+.grader-loader-rail,
+.grader-report-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.grader-proof-row span,
+.grader-preview-item,
+.grader-score-card,
+.grader-feature,
+.grader-quickwin-card,
+.grader-loading,
+.grader-report-hero {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(20px);
+}
+
+.grader-proof-row span,
+.grader-preview-item {
+  padding: 10px 14px;
+  border-radius: 999px;
+}
+
+.grader-visual,
+.grader-loading,
+.grader-report-hero {
+  border-radius: 30px;
+}
+
+.grader-visual {
+  padding: 28px;
+  background:
+    radial-gradient(circle at top left, rgba(13, 122, 99, 0.12), transparent 30%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.62));
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.grader-score-preview,
+.grader-report-score,
+.grader-results-top,
+.grader-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.grader-score-ring {
+  --score-angle: calc(var(--score, 0) * 1%);
+  width: 220px;
+  height: 220px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at center, rgba(245, 247, 244, 0.96) 0 55%, transparent 56%),
+    conic-gradient(#0d7a63 0 calc(var(--score, 0) * 1%), rgba(17, 35, 40, 0.08) calc(var(--score, 0) * 1%) 100%);
+  box-shadow: inset 0 0 0 10px rgba(255, 255, 255, 0.66);
+}
+
+.grader-score-ring.large {
+  width: 240px;
+  height: 240px;
+}
+
+.grader-score-ring strong {
+  display: block;
+  font-size: 3.4rem;
+  line-height: 1;
+  text-align: center;
+}
+
+.grader-score-ring span {
+  display: block;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.grader-preview-copy h2,
+.grader-score-summary h2,
+.grader-loading-copy h2 {
+  margin: 10px 0;
+}
+
+.grader-preview-list {
+  display: grid;
+  margin-top: 24px;
+}
+
+.grader-preview-item {
+  display: flex;
+  align-items: center;
+}
+
+.grader-preview-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--accent);
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.grader-section {
+  padding: 20px 0 42px;
+}
+
+.grader-section.alt {
+  padding-top: 10px;
+}
+
+.grader-feature-grid,
+.grader-score-grid,
+.grader-results-grid,
+.grader-quickwins {
+  display: grid;
+  gap: 18px;
+}
+
+.grader-feature-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.grader-score-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.grader-feature,
+.grader-score-card,
+.grader-quickwin-card {
+  padding: 24px;
+  border-radius: 24px;
+}
+
+.grader-upsell {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: center;
+  padding: 28px 0 64px;
+}
+
+.grader-results-shell {
+  padding: 18px 0 64px;
+}
+
+.grader-results-top {
+  align-items: end;
+  margin-bottom: 26px;
+}
+
+.grader-loading {
+  display: grid;
+  gap: 26px;
+  padding: 28px;
+}
+
+.grader-loader-rail span {
+  flex: 1;
+  min-width: 120px;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(13, 122, 99, 0.18), rgba(13, 122, 99, 0.55), rgba(13, 122, 99, 0.18));
+  background-size: 180% 100%;
+  animation: graderPulse 1.6s ease-in-out infinite;
+}
+
+.grader-loader-rail span:nth-child(2) {
+  animation-delay: 120ms;
+}
+
+.grader-loader-rail span:nth-child(3) {
+  animation-delay: 240ms;
+}
+
+.grader-report-hero {
+  padding: 28px;
+  display: grid;
+  gap: 28px;
+}
+
+.grader-report-actions {
+  align-items: center;
+}
+
+.grader-results-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.grader-detail-grid {
+  align-items: start;
+}
+
+.status-homepage,
+.status-service,
+.status-product,
+.status-about,
+.status-blog-support,
+.status-page {
+  background: rgba(26, 109, 177, 0.12);
+  color: #165d93;
+}
+
+@keyframes graderPulse {
+  0%,
+  100% {
+    background-position: 0% 50%;
+    opacity: 0.72;
+  }
+
+  50% {
+    background-position: 100% 50%;
+    opacity: 1;
+  }
+}
+
 .app-layout {
   display: grid;
   grid-template-columns: 280px 1fr;
@@ -708,6 +990,11 @@ textarea {
   color: #7f2332;
 }
 
+.state-card.warning {
+  border-color: rgba(177, 127, 41, 0.18);
+  color: #83510f;
+}
+
 .page-toolbar select,
 .toolbar-controls select {
   min-width: 220px;
@@ -787,13 +1074,21 @@ textarea {
 
 @media (max-width: 1120px) {
   .hero,
+  .grader-hero,
   .app-layout,
   .grid-two,
   .feature-grid.three,
   .steps-grid,
   .metrics-grid,
   .feature-grid.two,
-  .outline-grid {
+  .outline-grid,
+  .grader-feature-grid,
+  .grader-score-grid,
+  .grader-results-grid,
+  .grader-score-preview,
+  .grader-report-score,
+  .grader-results-top,
+  .grader-detail-grid {
     grid-template-columns: 1fr;
   }
 
@@ -808,12 +1103,14 @@ textarea {
 
 @media (max-width: 860px) {
   .landing-page,
+  .grader-page,
   .app-shell-page,
   .content-frame {
     padding: 18px;
   }
 
   .landing-nav,
+  .grader-upsell,
   .topbar,
   .page-toolbar,
   .section-header {
@@ -831,11 +1128,18 @@ textarea {
 
   .comparison-card,
   .detail-list.compact,
-  .form-grid {
+  .form-grid,
+  .grader-form {
     grid-template-columns: 1fr;
   }
 
   .span-2 {
     grid-column: span 1;
+  }
+
+  .grader-score-ring,
+  .grader-score-ring.large {
+    width: 200px;
+    height: 200px;
   }
 }

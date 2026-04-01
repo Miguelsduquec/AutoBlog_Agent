@@ -70,11 +70,6 @@ export class DraftService {
       summaryMessage: `Created a new draft for "${plan.title}".`
     };
   }
-
-  generateDraft(planId: string): Draft {
-    return this.generateFromArticlePlan(planId).draft;
-  }
-
   generateDraftsForWebsite(websiteId: string, limit = 3): Draft[] {
     const existingDraftPlanIds = new Set(
       draftRepository

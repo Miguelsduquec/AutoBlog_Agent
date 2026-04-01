@@ -3,6 +3,8 @@ import { AppShell } from "./layout/AppShell";
 import { AnalysisPage } from "./pages/AnalysisPage";
 import { ArticlePlansPage } from "./pages/ArticlePlansPage";
 import { AutomationRunsPage } from "./pages/AutomationRunsPage";
+import { ContentGapGraderPage } from "./pages/ContentGapGraderPage";
+import { ContentGapGraderResultsPage } from "./pages/ContentGapGraderResultsPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { DraftsPage } from "./pages/DraftsPage";
 import { ExportsPage } from "./pages/ExportsPage";
@@ -16,6 +18,8 @@ export function App() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
+      <Route path="/tools/content-gap-grader" element={<ContentGapGraderPage />} />
+      <Route path="/tools/content-gap-grader/results" element={<ContentGapGraderResultsPage />} />
       <Route path="/app" element={<AppShell />}>
         <Route index element={<Navigate replace to="/app/dashboard" />} />
         <Route path="dashboard" element={<DashboardPage />} />

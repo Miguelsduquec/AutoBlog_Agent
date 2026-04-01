@@ -67,8 +67,8 @@ export function seedDatabase(reset = false): void {
 
   const insertAnalysis = db.prepare(`
     INSERT OR IGNORE INTO website_analysis_runs (
-      id, website_id, niche_summary, content_pillars_json, keywords_json, extracted_data_json, analyzed_page_count, status, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      id, website_id, niche_summary, content_pillars_json, keywords_json, extracted_data_json, analyzed_page_count, confidence_level, confidence_score, status, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   for (const run of seed.analysisRuns) {
@@ -80,6 +80,8 @@ export function seedDatabase(reset = false): void {
       JSON.stringify(run.keywordsJson),
       JSON.stringify(run.extractedDataJson),
       run.analyzedPageCount,
+      run.confidenceLevel,
+      run.confidenceScore,
       run.status,
       run.createdAt
     );

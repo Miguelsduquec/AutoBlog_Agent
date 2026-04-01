@@ -1,0 +1,331 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - link "A Autoblog Agent" [ref=e5] [cursor=pointer]:
+      - /url: /
+      - generic [ref=e6]: A
+      - generic [ref=e7]: Autoblog Agent
+    - generic [ref=e8]:
+      - link "How it works" [ref=e9] [cursor=pointer]:
+        - /url: /#how-it-works
+      - link "Features" [ref=e10] [cursor=pointer]:
+        - /url: /#features
+      - link "Free tool" [ref=e11] [cursor=pointer]:
+        - /url: /tools/content-gap-grader
+      - link "Pricing" [ref=e12] [cursor=pointer]:
+        - /url: /#pricing
+      - link "Open app" [ref=e13] [cursor=pointer]:
+        - /url: /app/dashboard
+  - generic [ref=e14]:
+    - complementary [ref=e15]:
+      - generic [ref=e16]:
+        - generic [ref=e17]: A
+        - generic [ref=e18]:
+          - generic [ref=e19]: Autoblog Agent
+          - generic [ref=e20]: SEO automation operations
+      - navigation [ref=e21]:
+        - link "Dashboard" [ref=e22] [cursor=pointer]:
+          - /url: /app/dashboard
+        - link "Websites" [ref=e23] [cursor=pointer]:
+          - /url: /app/websites
+        - link "Analysis" [ref=e24] [cursor=pointer]:
+          - /url: /app/analysis
+        - link "Opportunities" [ref=e25] [cursor=pointer]:
+          - /url: /app/opportunities
+        - link "Plans" [ref=e26] [cursor=pointer]:
+          - /url: /app/plans
+        - link "Drafts" [ref=e27] [cursor=pointer]:
+          - /url: /app/drafts
+        - link "Automation" [ref=e28] [cursor=pointer]:
+          - /url: /app/automation-runs
+        - link "Exports" [ref=e29] [cursor=pointer]:
+          - /url: /app/exports
+      - generic [ref=e30]:
+        - generic [ref=e31]: Human review gate
+        - strong [ref=e32]: Enabled before export
+    - generic [ref=e33]:
+      - banner [ref=e34]:
+        - generic [ref=e35]:
+          - generic [ref=e36]: Operational workflow
+          - heading "Drafts" [level=1] [ref=e37]
+        - generic [ref=e38]:
+          - generic [ref=e39]: Automatic generation
+          - generic [ref=e40]: Review before publishing
+      - main [ref=e41]:
+        - generic [ref=e42]:
+          - generic [ref=e43]:
+            - generic [ref=e44]:
+              - heading "Drafts" [level=1] [ref=e45]
+              - paragraph [ref=e46]: Inspect structured article drafts, review metadata, and prepare content for human review.
+            - generic [ref=e47]:
+              - combobox [ref=e48]:
+                - option "All websites" [selected]
+                - option "Slow Lane Systems"
+                - option "Broken URL Co"
+                - option "Empty Site"
+                - option "Signal Stack"
+                - option "Northstar Bookkeeping"
+                - option "Workflow Atlas"
+                - option "Apex Growth"
+              - combobox [ref=e49]:
+                - option "All statuses" [selected]
+                - option "drafting"
+                - option "review"
+                - option "ready"
+                - option "failed"
+              - generic [ref=e50]:
+                - spinbutton [ref=e51]: "0"
+                - spinbutton [ref=e52]: "100"
+              - button "Generate drafts" [ref=e53] [cursor=pointer]
+          - generic [ref=e54]:
+            - generic [ref=e56]:
+              - heading "Draft queue" [level=2] [ref=e57]
+              - paragraph [ref=e58]: Publication-oriented drafts created from structured article plans.
+            - table [ref=e60]:
+              - rowgroup [ref=e61]:
+                - row "Title Related website Target keyword Status Readiness Created" [ref=e62]:
+                  - columnheader "Title" [ref=e63]
+                  - columnheader "Related website" [ref=e64]
+                  - columnheader "Target keyword" [ref=e65]
+                  - columnheader "Status" [ref=e66]
+                  - columnheader "Readiness" [ref=e67]
+                  - columnheader "Created" [ref=e68]
+                  - columnheader [ref=e69]
+              - rowgroup [ref=e70]:
+                - 'row "Common Mistakes With Workflow: Practical Guide Slow Lane Systems common mistakes with workflow review 97 31 Mar 2026, 16:20 View details Export" [ref=e71]':
+                  - 'cell "Common Mistakes With Workflow: Practical Guide" [ref=e72]'
+                  - cell "Slow Lane Systems" [ref=e73]
+                  - cell "common mistakes with workflow" [ref=e74]
+                  - cell "review" [ref=e75]:
+                    - generic [ref=e76]: review
+                  - cell "97" [ref=e77]
+                  - cell "31 Mar 2026, 16:20" [ref=e78]
+                  - cell "View details Export" [ref=e79]:
+                    - button "View details" [ref=e80] [cursor=pointer]
+                    - button "Export" [ref=e81] [cursor=pointer]
+                - 'row "How to Use Workflow: Step-by-Step Guide Slow Lane Systems how to use workflow review 97 31 Mar 2026, 16:20 View details Export" [ref=e82]':
+                  - 'cell "How to Use Workflow: Step-by-Step Guide" [ref=e83]'
+                  - cell "Slow Lane Systems" [ref=e84]
+                  - cell "how to use workflow" [ref=e85]
+                  - cell "review" [ref=e86]:
+                    - generic [ref=e87]: review
+                  - cell "97" [ref=e88]
+                  - cell "31 Mar 2026, 16:20" [ref=e89]
+                  - cell "View details Export" [ref=e90]:
+                    - button "View details" [ref=e91] [cursor=pointer]
+                    - button "Export" [ref=e92] [cursor=pointer]
+                - 'row "What is Workflow: Practical Guide for Business Teams Slow Lane Systems what is workflow review 97 31 Mar 2026, 16:20 View details Export" [ref=e93]':
+                  - 'cell "What is Workflow: Practical Guide for Business Teams" [ref=e94]'
+                  - cell "Slow Lane Systems" [ref=e95]
+                  - cell "what is workflow" [ref=e96]
+                  - cell "review" [ref=e97]:
+                    - generic [ref=e98]: review
+                  - cell "97" [ref=e99]
+                  - cell "31 Mar 2026, 16:20" [ref=e100]
+                  - cell "View details Export" [ref=e101]:
+                    - button "View details" [ref=e102] [cursor=pointer]
+                    - button "Export" [ref=e103] [cursor=pointer]
+                - row "Best Consulting for Business Teams Broken URL Co best consulting review 97 31 Mar 2026, 16:19 View details Export" [ref=e104]:
+                  - cell "Best Consulting for Business Teams" [ref=e105]
+                  - cell "Broken URL Co" [ref=e106]
+                  - cell "best consulting" [ref=e107]
+                  - cell "review" [ref=e108]:
+                    - generic [ref=e109]: review
+                  - cell "97" [ref=e110]
+                  - cell "31 Mar 2026, 16:19" [ref=e111]
+                  - cell "View details Export" [ref=e112]:
+                    - button "View details" [ref=e113] [cursor=pointer]
+                    - button "Export" [ref=e114] [cursor=pointer]
+                - 'row "Common Mistakes With Consulting: Practical Guide Broken URL Co common mistakes with consulting review 97 31 Mar 2026, 16:19 View details Export" [ref=e115]':
+                  - 'cell "Common Mistakes With Consulting: Practical Guide" [ref=e116]'
+                  - cell "Broken URL Co" [ref=e117]
+                  - cell "common mistakes with consulting" [ref=e118]
+                  - cell "review" [ref=e119]:
+                    - generic [ref=e120]: review
+                  - cell "97" [ref=e121]
+                  - cell "31 Mar 2026, 16:19" [ref=e122]
+                  - cell "View details Export" [ref=e123]:
+                    - button "View details" [ref=e124] [cursor=pointer]
+                    - button "Export" [ref=e125] [cursor=pointer]
+                - 'row "Consulting Checklist: Practical Guide Broken URL Co consulting checklist review 97 31 Mar 2026, 16:19 View details Export" [ref=e126]':
+                  - 'cell "Consulting Checklist: Practical Guide" [ref=e127]'
+                  - cell "Broken URL Co" [ref=e128]
+                  - cell "consulting checklist" [ref=e129]
+                  - cell "review" [ref=e130]:
+                    - generic [ref=e131]: review
+                  - cell "97" [ref=e132]
+                  - cell "31 Mar 2026, 16:19" [ref=e133]
+                  - cell "View details Export" [ref=e134]:
+                    - button "View details" [ref=e135] [cursor=pointer]
+                    - button "Export" [ref=e136] [cursor=pointer]
+                - 'row "Empty Cost Guide: What Business Teams Should Budget For Empty Site empty cost review 97 31 Mar 2026, 16:19 View details Export" [ref=e137]':
+                  - 'cell "Empty Cost Guide: What Business Teams Should Budget For" [ref=e138]'
+                  - cell "Empty Site" [ref=e139]
+                  - cell "empty cost" [ref=e140]
+                  - cell "review" [ref=e141]:
+                    - generic [ref=e142]: review
+                  - cell "97" [ref=e143]
+                  - cell "31 Mar 2026, 16:19" [ref=e144]
+                  - cell "View details Export" [ref=e145]:
+                    - button "View details" [ref=e146] [cursor=pointer]
+                    - button "Export" [ref=e147] [cursor=pointer]
+                - 'row "Benefits of Empty: Practical Guide Empty Site benefits of empty review 97 31 Mar 2026, 16:19 View details Export" [ref=e148]':
+                  - 'cell "Benefits of Empty: Practical Guide" [ref=e149]'
+                  - cell "Empty Site" [ref=e150]
+                  - cell "benefits of empty" [ref=e151]
+                  - cell "review" [ref=e152]:
+                    - generic [ref=e153]: review
+                  - cell "97" [ref=e154]
+                  - cell "31 Mar 2026, 16:19" [ref=e155]
+                  - cell "View details Export" [ref=e156]:
+                    - button "View details" [ref=e157] [cursor=pointer]
+                    - button "Export" [ref=e158] [cursor=pointer]
+                - row "Best Empty for Business Teams Empty Site best empty review 97 31 Mar 2026, 16:19 View details Export" [ref=e159]:
+                  - cell "Best Empty for Business Teams" [ref=e160]
+                  - cell "Empty Site" [ref=e161]
+                  - cell "best empty" [ref=e162]
+                  - cell "review" [ref=e163]:
+                    - generic [ref=e164]: review
+                  - cell "97" [ref=e165]
+                  - cell "31 Mar 2026, 16:19" [ref=e166]
+                  - cell "View details Export" [ref=e167]:
+                    - button "View details" [ref=e168] [cursor=pointer]
+                    - button "Export" [ref=e169] [cursor=pointer]
+                - 'row "Signal Checklist: Practical Guide Signal Stack signal checklist review 97 31 Mar 2026, 16:19 View details Export" [ref=e170]':
+                  - 'cell "Signal Checklist: Practical Guide" [ref=e171]'
+                  - cell "Signal Stack" [ref=e172]
+                  - cell "signal checklist" [ref=e173]
+                  - cell "review" [ref=e174]:
+                    - generic [ref=e175]: review
+                  - cell "97" [ref=e176]
+                  - cell "31 Mar 2026, 16:19" [ref=e177]
+                  - cell "View details Export" [ref=e178]:
+                    - button "View details" [ref=e179] [cursor=pointer]
+                    - button "Export" [ref=e180] [cursor=pointer]
+                - 'row "Benefits of Signal: Practical Guide Signal Stack benefits of signal review 97 31 Mar 2026, 16:19 View details Export" [ref=e181]':
+                  - 'cell "Benefits of Signal: Practical Guide" [ref=e182]'
+                  - cell "Signal Stack" [ref=e183]
+                  - cell "benefits of signal" [ref=e184]
+                  - cell "review" [ref=e185]:
+                    - generic [ref=e186]: review
+                  - cell "97" [ref=e187]
+                  - cell "31 Mar 2026, 16:19" [ref=e188]
+                  - cell "View details Export" [ref=e189]:
+                    - button "View details" [ref=e190] [cursor=pointer]
+                    - button "Export" [ref=e191] [cursor=pointer]
+                - row "Best Signal for Business Teams Signal Stack best signal review 97 31 Mar 2026, 16:19 View details Export" [ref=e192]:
+                  - cell "Best Signal for Business Teams" [ref=e193]
+                  - cell "Signal Stack" [ref=e194]
+                  - cell "best signal" [ref=e195]
+                  - cell "review" [ref=e196]:
+                    - generic [ref=e197]: review
+                  - cell "97" [ref=e198]
+                  - cell "31 Mar 2026, 16:19" [ref=e199]
+                  - cell "View details Export" [ref=e200]:
+                    - button "View details" [ref=e201] [cursor=pointer]
+                    - button "Export" [ref=e202] [cursor=pointer]
+                - row "Best Bookkeeping for Buyers Northstar Bookkeeping best bookkeeping review 97 31 Mar 2026, 16:19 View details Export" [ref=e203]:
+                  - cell "Best Bookkeeping for Buyers" [ref=e204]
+                  - cell "Northstar Bookkeeping" [ref=e205]
+                  - cell "best bookkeeping" [ref=e206]
+                  - cell "review" [ref=e207]:
+                    - generic [ref=e208]: review
+                  - cell "97" [ref=e209]
+                  - cell "31 Mar 2026, 16:19" [ref=e210]
+                  - cell "View details Export" [ref=e211]:
+                    - button "View details" [ref=e212] [cursor=pointer]
+                    - button "Export" [ref=e213] [cursor=pointer]
+                - 'row "Bookkeeping Checklist: Practical Guide Northstar Bookkeeping bookkeeping checklist review 97 31 Mar 2026, 16:19 View details Export" [ref=e214]':
+                  - 'cell "Bookkeeping Checklist: Practical Guide" [ref=e215]'
+                  - cell "Northstar Bookkeeping" [ref=e216]
+                  - cell "bookkeeping checklist" [ref=e217]
+                  - cell "review" [ref=e218]:
+                    - generic [ref=e219]: review
+                  - cell "97" [ref=e220]
+                  - cell "31 Mar 2026, 16:19" [ref=e221]
+                  - cell "View details Export" [ref=e222]:
+                    - button "View details" [ref=e223] [cursor=pointer]
+                    - button "Export" [ref=e224] [cursor=pointer]
+                - 'row "Bookkeeping Cost Guide: What Buyers Should Budget For Northstar Bookkeeping bookkeeping cost review 97 31 Mar 2026, 16:19 View details Export" [ref=e225]':
+                  - 'cell "Bookkeeping Cost Guide: What Buyers Should Budget For" [ref=e226]'
+                  - cell "Northstar Bookkeeping" [ref=e227]
+                  - cell "bookkeeping cost" [ref=e228]
+                  - cell "review" [ref=e229]:
+                    - generic [ref=e230]: review
+                  - cell "97" [ref=e231]
+                  - cell "31 Mar 2026, 16:19" [ref=e232]
+                  - cell "View details Export" [ref=e233]:
+                    - button "View details" [ref=e234] [cursor=pointer]
+                    - button "Export" [ref=e235] [cursor=pointer]
+                - row "Best Operations for Business Teams Workflow Atlas best operations review 97 31 Mar 2026, 16:19 View details Export" [ref=e236]:
+                  - cell "Best Operations for Business Teams" [ref=e237]
+                  - cell "Workflow Atlas" [ref=e238]
+                  - cell "best operations" [ref=e239]
+                  - cell "review" [ref=e240]:
+                    - generic [ref=e241]: review
+                  - cell "97" [ref=e242]
+                  - cell "31 Mar 2026, 16:19" [ref=e243]
+                  - cell "View details Export" [ref=e244]:
+                    - button "View details" [ref=e245] [cursor=pointer]
+                    - button "Export" [ref=e246] [cursor=pointer]
+                - 'row "Common Mistakes With Operations: Practical Guide Workflow Atlas common mistakes with operations review 97 31 Mar 2026, 16:19 View details Export" [ref=e247]':
+                  - 'cell "Common Mistakes With Operations: Practical Guide" [ref=e248]'
+                  - cell "Workflow Atlas" [ref=e249]
+                  - cell "common mistakes with operations" [ref=e250]
+                  - cell "review" [ref=e251]:
+                    - generic [ref=e252]: review
+                  - cell "97" [ref=e253]
+                  - cell "31 Mar 2026, 16:19" [ref=e254]
+                  - cell "View details Export" [ref=e255]:
+                    - button "View details" [ref=e256] [cursor=pointer]
+                    - button "Export" [ref=e257] [cursor=pointer]
+                - 'row "How to Use Operations: Step-by-Step Guide Workflow Atlas how to use operations review 97 31 Mar 2026, 16:19 View details Export" [ref=e258]':
+                  - 'cell "How to Use Operations: Step-by-Step Guide" [ref=e259]'
+                  - cell "Workflow Atlas" [ref=e260]
+                  - cell "how to use operations" [ref=e261]
+                  - cell "review" [ref=e262]:
+                    - generic [ref=e263]: review
+                  - cell "97" [ref=e264]
+                  - cell "31 Mar 2026, 16:19" [ref=e265]
+                  - cell "View details Export" [ref=e266]:
+                    - button "View details" [ref=e267] [cursor=pointer]
+                    - button "Export" [ref=e268] [cursor=pointer]
+                - 'row "Apex Checklist: Practical Guide Apex Growth apex checklist review 97 31 Mar 2026, 16:19 View details Export" [ref=e269]':
+                  - 'cell "Apex Checklist: Practical Guide" [ref=e270]'
+                  - cell "Apex Growth" [ref=e271]
+                  - cell "apex checklist" [ref=e272]
+                  - cell "review" [ref=e273]:
+                    - generic [ref=e274]: review
+                  - cell "97" [ref=e275]
+                  - cell "31 Mar 2026, 16:19" [ref=e276]
+                  - cell "View details Export" [ref=e277]:
+                    - button "View details" [ref=e278] [cursor=pointer]
+                    - button "Export" [ref=e279] [cursor=pointer]
+                - 'row "Apex Cost Guide: What Business Teams Should Budget For Apex Growth apex cost review 97 31 Mar 2026, 16:19 View details Export" [ref=e280]':
+                  - 'cell "Apex Cost Guide: What Business Teams Should Budget For" [ref=e281]'
+                  - cell "Apex Growth" [ref=e282]
+                  - cell "apex cost" [ref=e283]
+                  - cell "review" [ref=e284]:
+                    - generic [ref=e285]: review
+                  - cell "97" [ref=e286]
+                  - cell "31 Mar 2026, 16:19" [ref=e287]
+                  - cell "View details Export" [ref=e288]:
+                    - button "View details" [ref=e289] [cursor=pointer]
+                    - button "Export" [ref=e290] [cursor=pointer]
+                - row "How Business Teams Evaluate Apex for Business Teams Apex Growth apex for business teams review 97 31 Mar 2026, 16:19 View details Export" [ref=e291]:
+                  - cell "How Business Teams Evaluate Apex for Business Teams" [ref=e292]
+                  - cell "Apex Growth" [ref=e293]
+                  - cell "apex for business teams" [ref=e294]
+                  - cell "review" [ref=e295]:
+                    - generic [ref=e296]: review
+                  - cell "97" [ref=e297]
+                  - cell "31 Mar 2026, 16:19" [ref=e298]
+                  - cell "View details Export" [ref=e299]:
+                    - button "View details" [ref=e300] [cursor=pointer]
+                    - button "Export" [ref=e301] [cursor=pointer]
+          - generic [ref=e302]:
+            - generic [ref=e304]:
+              - heading "Draft detail" [level=2] [ref=e305]
+              - paragraph [ref=e306]: Review structure, metadata, HTML preview, FAQ, and internal links before marking a draft ready.
+            - generic [ref=e308]:
+              - heading "No draft selected" [level=3] [ref=e309]
+              - paragraph [ref=e310]: Choose a draft from the table to inspect its content package and SEO metadata.

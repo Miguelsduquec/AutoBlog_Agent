@@ -32,6 +32,7 @@ export function OpportunitiesPage() {
   const [editing, setEditing] = useState<ContentOpportunity | null>(null);
   const [sourceFilter, setSourceFilter] = useState<string>("all");
   const [generationMessage, setGenerationMessage] = useState<string>("");
+  const [generationError, setGenerationError] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [planGenerationId, setPlanGenerationId] = useState<string>("");
   const [planMessage, setPlanMessage] = useState<string>("");
@@ -59,10 +60,13 @@ export function OpportunitiesPage() {
 
   async function handleGeneratePlan(opportunityId: string) {
     setPlanGenerationId(opportunityId);
+    setGenerationError("");
     try {
       const result = await api.generatePlanFromOpportunity(opportunityId);
       setPlanMessage(result.summaryMessage);
       await opportunitiesQuery.refresh();
+    } catch (error) {
+      setGenerationError(error instanceof Error ? error.message : "Unable to generate a plan.");
     } finally {
       setPlanGenerationId("");
     }
@@ -120,10 +124,13 @@ export function OpportunitiesPage() {
               onClick={() =>
                 void (async () => {
                   setIsGenerating(true);
+                  setGenerationError("");
                   try {
                     const result = await api.generateOpportunities(selectedWebsiteId, 10);
                     setGenerationMessage(result.summaryMessage);
                     await opportunitiesQuery.refresh();
+                  } catch (error) {
+                    setGenerationError(error instanceof Error ? error.message : "Unable to generate opportunities.");
                   } finally {
                     setIsGenerating(false);
                   }
@@ -148,6 +155,7 @@ export function OpportunitiesPage() {
       />
 
       {generationMessage ? <div className="state-card">{generationMessage}</div> : null}
+      {generationError ? <div className="state-card error">{generationError}</div> : null}
       {planMessage ? <div className="state-card">{planMessage}</div> : null}
 
       <div className="grid-two wide-right">

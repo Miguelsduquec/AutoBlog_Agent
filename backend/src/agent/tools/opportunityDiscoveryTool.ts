@@ -4,6 +4,6 @@ export class OpportunityDiscoveryTool {
   private readonly opportunityService = new OpportunityService();
 
   execute(websiteId: string, limit = 8) {
-    return this.opportunityService.generateForWebsite(websiteId, limit);
+    return this.opportunityService.generateFromLatestAnalysis(websiteId, limit).createdOpportunities;
   }
 }

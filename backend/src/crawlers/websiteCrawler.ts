@@ -1,26 +1,40 @@
 import * as cheerio from "cheerio";
 import { CrawlResultPage, Website } from "../types";
 
-const DEFAULT_PATHS = ["/", "/about", "/services", "/service", "/platform", "/products", "/solutions", "/blog", "/resources"];
+const DEFAULT_PATHS = [
+  "/",
+  "/blog",
+  "/resources",
+  "/insights",
+  "/guides",
+  "/services",
+  "/service",
+  "/solutions",
+  "/products",
+  "/platform",
+  "/about"
+];
 
 function inferPageType(url: string): string {
-  if (url.endsWith("/")) {
+  const pathname = new URL(url).pathname.replace(/\/+$/, "") || "/";
+
+  if (pathname === "/") {
     return "homepage";
   }
 
-  if (url.includes("/about")) {
+  if (pathname.includes("/about")) {
     return "about";
   }
 
-  if (url.includes("/service")) {
+  if (pathname.includes("/service")) {
     return "service";
   }
 
-  if (url.includes("/platform") || url.includes("/product") || url.includes("/solution")) {
+  if (pathname.includes("/platform") || pathname.includes("/product") || pathname.includes("/solution")) {
     return "product";
   }
 
-  if (url.includes("/blog") || url.includes("/resource")) {
+  if (pathname.includes("/blog") || pathname.includes("/resource") || pathname.includes("/guide") || pathname.includes("/insight")) {
     return "blog-support";
   }
 
@@ -33,6 +47,22 @@ function trimText(value: string, maxLength = 420): string {
 
 function unique(values: string[]): string[] {
   return [...new Set(values.filter(Boolean))];
+}
+
+function scoreCandidatePath(pathname: string): number {
+  if (pathname === "/") {
+    return 100;
+  }
+  if (pathname.includes("/blog") || pathname.includes("/resource") || pathname.includes("/guide") || pathname.includes("/insight")) {
+    return 90;
+  }
+  if (pathname.includes("/service") || pathname.includes("/solution") || pathname.includes("/product") || pathname.includes("/platform")) {
+    return 80;
+  }
+  if (pathname.includes("/about")) {
+    return 40;
+  }
+  return 20;
 }
 
 function buildFallbackPage(website: Website, pageType: string, url: string): CrawlResultPage {
@@ -58,14 +88,16 @@ function buildFallbackPage(website: Website, pageType: string, url: string): Cra
       pageType === "homepage"
         ? `${website.name} serves ${website.targetCountry} customers with a ${website.tone.toLowerCase()} approach to ${website.niche.toLowerCase()}. The website focuses on ${website.contentGoal.toLowerCase()} and supports recurring publishing on a ${website.publishingFrequency.toLowerCase()} cadence.`
         : `${website.name} offers services aligned with ${website.niche.toLowerCase()} and is a strong candidate for supporting content around educational and commercial search intent.`,
-    pageType
+    pageType,
+    isFallback: true
   };
 }
 
 function buildFallbackPages(website: Website): CrawlResultPage[] {
   return [
     buildFallbackPage(website, "homepage", website.domain),
-    buildFallbackPage(website, "service", `${website.domain.replace(/\/$/, "")}/services`)
+    buildFallbackPage(website, "service", `${website.domain.replace(/\/$/, "")}/services`),
+    buildFallbackPage(website, "blog-support", `${website.domain.replace(/\/$/, "")}/blog`)
   ];
 }
 
@@ -117,10 +149,10 @@ function extractPage(url: string, html: string): CrawlResultPage {
       .slice(0, 30)
       .toArray()
       .map((element) => trimText($(element).text(), 220))
-      .filter((text) => text.length > 40)
+      .filter((text) => text.length > 28)
   );
-
-  const contentExtract = trimText(paragraphs.join(" "), 1200);
+  const fallbackBodyText = trimText(mainContentRoot.text(), 1400);
+  const contentExtract = trimText(paragraphs.join(" ") || fallbackBodyText, 1400);
   const title = trimText($("title").first().text() || "Untitled page", 120);
   const metaDescription = trimText($('meta[name="description"]').attr("content") || "", 180);
   const h1 = trimText($("h1").first().text() || headings[0] || title, 140);
@@ -133,8 +165,37 @@ function extractPage(url: string, html: string): CrawlResultPage {
     headings,
     h2Headings,
     contentExtract,
-    pageType: inferPageType(url)
+    pageType: inferPageType(url),
+    isFallback: false
   };
+}
+
+function discoverPriorityUrls(baseUrl: string, html: string): string[] {
+  const $ = cheerio.load(html);
+  const candidates = $("a[href]")
+    .toArray()
+    .map((element) => $(element).attr("href") ?? "")
+    .filter(Boolean)
+    .map((href) => {
+      try {
+        return new URL(href, baseUrl).toString();
+      } catch {
+        return "";
+      }
+    })
+    .filter(Boolean)
+    .filter((url) => {
+      const parsed = new URL(url);
+      const base = new URL(baseUrl);
+      return parsed.origin === base.origin && !parsed.hash && !parsed.search;
+    })
+    .sort((left, right) => {
+      const leftPath = new URL(left).pathname.replace(/\/+$/, "") || "/";
+      const rightPath = new URL(right).pathname.replace(/\/+$/, "") || "/";
+      return scoreCandidatePath(rightPath) - scoreCandidatePath(leftPath);
+    });
+
+  return unique(candidates);
 }
 
 export class WebsiteCrawler {
@@ -153,11 +214,19 @@ export class WebsiteCrawler {
 
   async crawlWebsite(website: Website): Promise<CrawlResultPage[]> {
     const domain = website.domain.endsWith("/") ? website.domain.slice(0, -1) : website.domain;
-    const urls = DEFAULT_PATHS.map((entry) => new URL(entry, `${domain}/`).toString());
+    const homepageUrl = new URL("/", `${domain}/`).toString();
+    const homepageHtml = await fetchPage(homepageUrl);
+    const discoveredUrls = homepageHtml ? discoverPriorityUrls(homepageUrl, homepageHtml) : [];
+    const urls = unique([
+      homepageUrl,
+      ...discoveredUrls,
+      ...DEFAULT_PATHS.map((entry) => new URL(entry, `${domain}/`).toString())
+    ]);
     const results: CrawlResultPage[] = [];
 
-    for (const url of urls) {
-      const result = await this.analyzeUrl(url);
+    for (const [index, url] of urls.entries()) {
+      const result =
+        index === 0 && homepageHtml ? extractPage(url, homepageHtml) : await this.analyzeUrl(url);
       if (!result) {
         continue;
       }
@@ -169,6 +238,10 @@ export class WebsiteCrawler {
       }
     }
 
-    return results.length > 0 ? results : buildFallbackPages(website);
+    if (results.length > 0) {
+      return results;
+    }
+
+    return buildFallbackPages(website);
   }
 }

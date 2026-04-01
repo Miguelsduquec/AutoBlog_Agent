@@ -93,8 +93,4 @@ export class ArticlePlanService {
       summaryMessage: `Created a new article plan for "${opportunity.keyword}".`
     };
   }
-
-  createPlan(plan: ArticlePlan): ArticlePlan {
-    return articlePlanRepository.create(plan);
-  }
 }

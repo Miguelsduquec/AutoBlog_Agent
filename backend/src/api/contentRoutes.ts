@@ -39,11 +39,6 @@ router.delete("/opportunities/:id", (request, response) => {
   response.status(204).send();
 });
 
-router.get("/plans", (request, response) => {
-  const websiteId = typeof request.query.websiteId === "string" ? request.query.websiteId : undefined;
-  response.json(articlePlanService.listPlans(websiteId));
-});
-
 router.get("/article-plans", (request, response) => {
   const websiteId = typeof request.query.websiteId === "string" ? request.query.websiteId : undefined;
   response.json(articlePlanService.listPlans(websiteId));
@@ -83,14 +78,6 @@ router.get("/drafts/:id", (request, response) => {
 });
 
 router.post("/article-plans/:id/generate-draft", (request, response) => {
-  const result = draftService.generateFromArticlePlan(
-    String(request.params.id),
-    Boolean(request.body?.regenerate)
-  );
-  response.status(result.skipped || result.regenerated ? 200 : 201).json(result);
-});
-
-router.post("/plans/:id/drafts", (request, response) => {
   const result = draftService.generateFromArticlePlan(
     String(request.params.id),
     Boolean(request.body?.regenerate)

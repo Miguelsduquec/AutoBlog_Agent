@@ -1,7 +1,8 @@
-import { CONTENT_PROMPTS } from "../agent/prompts/contentPrompts";
 import { ArticlePlan, Draft, Website, WebsiteAnalysisRun, WebsitePage } from "../types";
 import { createId } from "../utils/ids";
 import { toSlug } from "../utils/slug";
+import { formatKeywordAsTopic, normalizeText, trimToLength } from "../utils/text";
+import { inferAudience } from "./contentHeuristics";
 
 type DraftSection = {
   heading: string;
@@ -9,21 +10,9 @@ type DraftSection = {
   bullets?: string[];
 };
 
-function normalize(value: string): string {
-  return value.toLowerCase().replace(/[^a-z0-9\s]+/g, " ").replace(/\s+/g, " ").trim();
-}
-
-function titleCase(value: string): string {
-  return value
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
-}
-
 function overlapScore(left: string, right: string): number {
-  const leftTokens = new Set(normalize(left).split(" ").filter(Boolean));
-  const rightTokens = new Set(normalize(right).split(" ").filter(Boolean));
+  const leftTokens = new Set(normalizeText(left).split(" ").filter(Boolean));
+  const rightTokens = new Set(normalizeText(right).split(" ").filter(Boolean));
 
   if (!leftTokens.size || !rightTokens.size) {
     return 0;
@@ -39,99 +28,101 @@ function overlapScore(left: string, right: string): number {
   return matches / Math.max(leftTokens.size, rightTokens.size);
 }
 
-function trimToLength(value: string, maxLength: number): string {
-  if (value.length <= maxLength) {
-    return value;
-  }
-
-  return `${value.slice(0, maxLength - 1).trim()}…`;
+function extractKeySupportTerms(plan: ArticlePlan, analysis: WebsiteAnalysisRun | null): string[] {
+  return [
+    ...plan.secondaryKeywordsJson,
+    ...(analysis?.extractedDataJson.h2Headings ?? []),
+    ...(analysis?.keywordsJson ?? [])
+  ]
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .filter((value, index, array) => array.findIndex((item) => normalizeText(item) === normalizeText(value)) === index)
+    .slice(0, 5);
 }
 
-function detectAudience(website: Website, analysis: WebsiteAnalysisRun | null): string {
-  const corpus = normalize(`${website.niche} ${website.contentGoal} ${analysis?.nicheSummary ?? ""}`);
+function buildOutline(plan: ArticlePlan, audience: string, supportTerms: string[]): string[] {
+  const firstSupport = supportTerms[0] ?? formatKeywordAsTopic(plan.targetKeyword);
+  const secondSupport = supportTerms[1] ?? "Implementation priorities";
 
-  if (corpus.includes("finance")) {
-    return "finance teams";
-  }
-  if (corpus.includes("small business") || corpus.includes("smb")) {
-    return "small businesses";
-  }
-  if (corpus.includes("landscape") || corpus.includes("garden")) {
-    return "homeowners";
-  }
-  if (corpus.includes("consult")) {
-    return "operations leaders";
-  }
-
-  return "buyers";
-}
-
-function buildOutline(plan: ArticlePlan, audience: string): string[] {
   return [
     `Introduction: ${plan.title}`,
-    `Why ${plan.targetKeyword} matters for ${audience}`,
-    `What strong execution looks like`,
-    `A practical framework for ${plan.targetKeyword}`,
-    `Common mistakes and implementation tips`,
-    `Conclusion and next steps`
+    `What ${formatKeywordAsTopic(plan.targetKeyword)} looks like in practice`,
+    `${titleCaseForHeading(firstSupport)} and the decisions that shape results`,
+    `A practical framework for ${formatKeywordAsTopic(plan.targetKeyword)}`,
+    `Common mistakes when teams approach ${formatKeywordAsTopic(plan.targetKeyword)}`,
+    `Conclusion: next steps for ${audience}`
   ];
+}
+
+function titleCaseForHeading(value: string): string {
+  return value
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 }
 
 function buildSections(
   plan: ArticlePlan,
   website: Website,
   analysis: WebsiteAnalysisRun | null,
-  audience: string
+  audience: string,
+  supportTerms: string[]
 ): DraftSection[] {
-  const supportingTerms = plan.secondaryKeywordsJson.slice(0, 3).join(", ");
-  const analysisSummary = analysis?.nicheSummary ?? `${website.name} focuses on ${website.niche.toLowerCase()}.`;
-  const extractedHeading = analysis?.extractedDataJson.h2Headings[0] ?? website.niche;
-  const keywordLabel = titleCase(plan.targetKeyword);
+  const primaryTheme = supportTerms[0] ?? website.niche;
+  const secondaryTheme = supportTerms[1] ?? plan.secondaryKeywordsJson[0] ?? "implementation planning";
+  const pageReference = analysis?.extractedDataJson.pageSignals.find((page) => page.pageType === "service" || page.pageType === "product");
+  const blogReference = analysis?.extractedDataJson.pageSignals.find((page) => page.pageType === "blog-support");
+  const nicheSummary = analysis?.nicheSummary ?? `${website.name} focuses on ${website.niche.toLowerCase()}.`;
 
   return [
     {
-      heading: "Why this topic matters",
+      heading: `Why ${formatKeywordAsTopic(plan.targetKeyword)} matters for ${audience}`,
       paragraphs: [
-        `${keywordLabel} is a meaningful topic for ${audience} because it sits close to real buying or implementation decisions. Searchers usually arrive here when they need more than a definition. They want guidance that helps them reduce confusion, choose the right next step, and avoid wasted effort.`,
-        `${analysisSummary} That context matters because the article should feel grounded in the website's expertise rather than sounding like a generic AI explainer.`
+        `${formatKeywordAsTopic(plan.targetKeyword)} matters because readers searching for it are usually trying to solve a real workflow, buying, or implementation problem. They are not looking for a vague overview. They need an article that explains what the topic changes in practice and how to evaluate the right next step.`,
+        `${website.name} is positioned around ${website.niche.toLowerCase()}, so the draft should connect this topic to the kind of outcomes the website already promises. ${nicheSummary}`
       ]
     },
     {
-      heading: "What readers need to understand first",
+      heading: `What strong ${primaryTheme.toLowerCase()} execution looks like`,
       paragraphs: [
-        `Before jumping into tools or tactics, readers should understand the operational problem behind ${plan.targetKeyword}. The right framing depends on search intent: ${plan.searchIntent}. That means the article should balance clarity, decision support, and practical context.`,
-        `The editorial angle for this piece is straightforward: ${plan.angle}`
+        `A credible article should clarify what good execution looks like before it moves into tactics. In this case, that means showing how ${formatKeywordAsTopic(plan.targetKeyword).toLowerCase()} connects to planning, ownership, and measurable business outcomes rather than treating it as a purely abstract concept.`,
+        pageReference
+          ? `The website already signals relevance through pages like "${pageReference.title}", so the article should bridge educational intent with the service or product context readers can act on later.`
+          : `The article should bridge educational intent with the website's real offer so that the CTA feels earned rather than bolted on.`
       ],
       bullets: [
-        `Clarify the outcome the reader is trying to achieve`,
-        `Explain how ${extractedHeading.toLowerCase()} connects to the wider business goal`,
-        `Use examples that reflect ${website.niche.toLowerCase()} rather than abstract best practices`
+        `Define the business problem behind ${plan.targetKeyword}`,
+        `Show what success looks like for ${audience}`,
+        `Use criteria that help readers compare options without overcomplicating the decision`
       ]
     },
     {
-      heading: `A practical framework for ${plan.targetKeyword}`,
+      heading: `A practical framework for ${secondaryTheme.toLowerCase()}`,
       paragraphs: [
-        `A strong article should move through the topic in a useful order: define the problem, show what good looks like, outline practical choices, and then make implementation feel manageable. This keeps the piece readable while still supporting SEO intent.`,
-        `Use supporting terms such as ${supportingTerms} to broaden coverage naturally. They should appear as helpful context inside the article, not as forced keyword stuffing.`
+        `The middle of the article should move from concept to execution. This is where the editorial angle matters most: ${plan.angle}`,
+        `A strong structure usually works in four stages: explain the current friction, outline the decision points, show a practical path forward, and reinforce how teams can start without turning the project into a heavyweight initiative.`
       ],
       bullets: [
-        `Start with the reader's current challenge`,
+        `Start with the constraints readers already feel today`,
         `Break the solution into 3 to 5 realistic decisions`,
-        `Show how teams can apply the idea without unnecessary complexity`
+        `Use supporting terms such as ${supportTerms.slice(0, 3).join(", ")} to broaden topical coverage naturally`
       ]
     },
     {
-      heading: "Common mistakes to avoid",
+      heading: `Common mistakes when teams approach ${formatKeywordAsTopic(plan.targetKeyword).toLowerCase()}`,
       paragraphs: [
-        `One common mistake is treating ${plan.targetKeyword} as a purely technical topic when the real risk is usually operational. Teams often move too quickly into tooling, skip ownership decisions, or underestimate how change management affects outcomes.`,
-        `Another mistake is writing the article in a way that sounds polished but unhelpful. The best version of this draft should feel credible, specific, and aligned with the tone "${website.tone}".`
+        `One of the most common mistakes is treating ${plan.targetKeyword} like a checklist item instead of a capability that needs scope, ownership, and follow-through. That usually leads to articles that sound polished but do not help the reader make a confident decision.`,
+        blogReference
+          ? `Another mistake is ignoring adjacent topics the website already hints at through pages such as "${blogReference.title}". A better article acknowledges the wider context and uses it to make the guidance feel more credible.`
+          : `Another mistake is skipping the surrounding context. Readers need examples, trade-offs, and implementation cautions to trust the advice.`
       ]
     },
     {
-      heading: "How to turn the topic into next steps",
+      heading: "How to turn this research into next steps",
       paragraphs: [
-        `The conclusion should help readers move from research into action. That does not require a hard sell. It simply means connecting the article back to the website's real offer and giving the reader a sensible next step.`,
-        `${plan.cta}. This CTA works best when it feels like the natural continuation of the advice already provided in the article.`
+        `The conclusion should convert clarity into motion. That means summarizing the practical takeaway, pointing readers toward the next sensible action, and connecting the article back to the website's offer in a way that feels useful.`,
+        `${plan.cta}. This CTA works best when it follows naturally from the advice already given instead of interrupting the article with a hard sell.`
       ]
     }
   ];
@@ -211,41 +202,41 @@ function buildMetaTitle(plan: ArticlePlan, website: Website): string {
 
 function buildMetaDescription(plan: ArticlePlan, website: Website, audience: string): string {
   return trimToLength(
-    `Learn ${plan.targetKeyword} with practical guidance for ${audience}. Understand key decisions, common mistakes, and the next best step with ${website.name}.`,
+    `Learn ${plan.targetKeyword} with practical guidance for ${audience}. Cover key decisions, common mistakes, and clear next steps with ${website.name}.`,
     158
   );
 }
 
 function buildFaq(plan: ArticlePlan, website: Website, audience: string): Draft["faqJson"] {
   const keyword = plan.targetKeyword;
-  const commonQuestions = [
+  const questions = [
     {
-      question: `What should teams understand first about ${keyword}?`,
-      answer: `They should start with the business problem behind ${keyword}, then evaluate the best path based on goals, constraints, and the level of change required.`
+      question: `What should ${audience} understand first about ${keyword}?`,
+      answer: `Start with the operational or buying problem behind ${keyword}, then evaluate the decision points that matter most for scope, ownership, and expected outcomes.`
     },
     {
-      question: `How can ${audience} approach ${keyword} without overcomplicating it?`,
-      answer: "Focus on outcomes, define ownership early, and use a step-by-step rollout instead of trying to solve everything at once."
+      question: `How detailed should an article about ${keyword} be?`,
+      answer: "It should move beyond definitions and include practical examples, decision criteria, and the mistakes readers should avoid."
     },
     {
-      question: `What mistakes are most common when working on ${keyword}?`,
-      answer: "The most common mistakes are weak scoping, unclear ownership, and jumping into execution before the team agrees on what success looks like."
+      question: `What makes content about ${keyword} feel credible?`,
+      answer: "Specific examples, clear trade-offs, and advice that connects the topic back to real implementation or business outcomes."
     }
   ];
 
   if (plan.searchIntent === "commercial" || plan.searchIntent === "comparison") {
-    commonQuestions.push({
+    questions.push({
       question: `When should someone talk to ${website.name}?`,
-      answer: `When the team has a clear problem to solve but needs help evaluating options, narrowing scope, or turning strategy into an implementation plan.`
+      answer: `When the team understands the problem but needs help evaluating options, narrowing scope, or turning the chosen approach into a workable plan.`
     });
   } else {
-    commonQuestions.push({
-      question: `How do readers know they are ready to act on ${keyword}?`,
-      answer: "They are ready when they can define the desired outcome, name the constraints, and identify the first small step that moves the work forward."
+    questions.push({
+      question: `What should readers do after learning about ${keyword}?`,
+      answer: "Define the first useful step, identify who owns it, and use the article to guide a practical rollout instead of collecting more abstract advice."
     });
   }
 
-  return commonQuestions.slice(0, 4);
+  return questions.slice(0, 4);
 }
 
 function buildInternalLinks(plan: ArticlePlan, pages: WebsitePage[]): Draft["internalLinksJson"] {
@@ -257,7 +248,10 @@ function buildInternalLinks(plan: ArticlePlan, pages: WebsitePage[]): Draft["int
       let score = overlapScore(keywordCorpus, pageCorpus);
 
       if (["service", "product", "homepage"].includes(page.pageType)) {
-        score += 0.08;
+        score += 0.12;
+      }
+      if (page.pageType === "blog-support") {
+        score += 0.04;
       }
 
       return {
@@ -267,51 +261,65 @@ function buildInternalLinks(plan: ArticlePlan, pages: WebsitePage[]): Draft["int
     })
     .sort((left, right) => right.score - left.score)
     .slice(0, 4)
-    .filter((entry) => entry.score > 0 || ["service", "product", "homepage"].includes(entry.page.pageType));
+    .filter((entry) => entry.score > 0.08 || ["service", "product", "homepage"].includes(entry.page.pageType));
 
   return scored.map(({ page }) => ({
     label: page.title,
     url: page.url,
     reason:
       page.pageType === "homepage"
-        ? "Use the homepage as a broad trust-building destination."
+        ? "Use the homepage as a trust-building overview page."
         : page.pageType === "service" || page.pageType === "product"
-          ? "Connect educational readers to a high-intent page."
-          : "Support the article with adjacent informational context."
+          ? "Connect educational readers to a higher-intent page."
+          : "Support the article with adjacent educational context."
   }));
 }
 
-function calculateReadinessScore(draft: Pick<Draft, "outlineJson" | "articleMarkdown" | "metaTitle" | "metaDescription" | "faqJson" | "internalLinksJson">, plan: ArticlePlan): number {
+function calculateReadinessScore(
+  draft: Pick<Draft, "outlineJson" | "articleMarkdown" | "metaTitle" | "metaDescription" | "faqJson" | "internalLinksJson">,
+  plan: ArticlePlan,
+  analysis: WebsiteAnalysisRun | null
+): number {
   const wordCount = draft.articleMarkdown.split(/\s+/).filter(Boolean).length;
-  let score = 56;
+  let score = 34;
 
-  if (overlapScore(plan.title, plan.targetKeyword) >= 0.35 || normalize(plan.title).includes(normalize(plan.targetKeyword))) {
+  if (overlapScore(plan.title, plan.targetKeyword) >= 0.35 || normalizeText(plan.title).includes(normalizeText(plan.targetKeyword))) {
     score += 10;
   }
   if (draft.outlineJson.length >= 6) {
-    score += 10;
+    score += 8;
   }
   if (draft.metaTitle && draft.metaDescription) {
-    score += 12;
+    score += 10;
   }
   if (draft.faqJson.length >= 3) {
-    score += 8;
+    score += 6;
   }
   if (draft.internalLinksJson.length >= 2) {
-    score += 8;
+    score += 6;
   }
-  if (wordCount >= 850) {
-    score += 12;
-  } else if (wordCount >= 650) {
-    score += 8;
-  } else if (wordCount >= 450) {
+  if (wordCount >= 950) {
+    score += 18;
+  } else if (wordCount >= 750) {
+    score += 14;
+  } else if (wordCount >= 550) {
+    score += 10;
+  } else if (wordCount >= 400) {
     score += 4;
   }
-  if (normalize(draft.articleMarkdown).includes(normalize(plan.targetKeyword))) {
+  if (normalizeText(draft.articleMarkdown).includes(normalizeText(plan.targetKeyword))) {
     score += 8;
   }
 
-  return Math.max(48, Math.min(97, score));
+  if (analysis?.confidenceLevel === "high") {
+    score += 8;
+  } else if (analysis?.confidenceLevel === "medium") {
+    score += 2;
+  } else if (analysis?.confidenceLevel === "low") {
+    score -= 14;
+  }
+
+  return Math.max(22, Math.min(94, score));
 }
 
 export class DraftGeneratorService {
@@ -322,20 +330,19 @@ export class DraftGeneratorService {
     pages: WebsitePage[],
     existingDraft?: Draft | null
   ): Draft {
-    const audience = detectAudience(website, analysis);
-    const outline = buildOutline(plan, audience);
-    const sections = buildSections(plan, website, analysis, audience);
+    const audience = inferAudience(website, analysis);
+    const supportTerms = extractKeySupportTerms(plan, analysis);
+    const outline = buildOutline(plan, audience, supportTerms);
+    const sections = buildSections(plan, website, analysis, audience, supportTerms);
     const faqJson = buildFaq(plan, website, audience);
     const internalLinksJson = buildInternalLinks(plan, pages);
 
     const markdownParts: string[] = [
       `# ${plan.title}`,
       "",
-      CONTENT_PROMPTS.draftingStyle,
+      `Teams looking into ${plan.targetKeyword} usually need a clearer path from research to action. This article explains the topic in the context of ${website.niche.toLowerCase()}, highlights what matters most for ${audience}, and keeps the advice grounded in real implementation decisions.`,
       "",
-      `Readers searching for ${plan.targetKeyword} usually need practical guidance, not abstract commentary. This draft is designed to explain the topic clearly, connect it to ${website.niche.toLowerCase()}, and move naturally toward the CTA without sounding forced.`,
-      "",
-      `The article angle is simple: ${plan.angle}`,
+      `The angle for this piece is simple: ${plan.angle}`,
       ""
     ];
 
@@ -366,7 +373,7 @@ export class DraftGeneratorService {
     markdownParts.push("## Conclusion");
     markdownParts.push("");
     markdownParts.push(
-      `A strong article on ${plan.targetKeyword} should leave the reader with clarity, a practical next step, and confidence that the topic is manageable. For ${website.name}, that means connecting educational content to the website's real offer without losing usefulness.`
+      `A strong article on ${plan.targetKeyword} should leave readers with a clearer decision path and a realistic next step. For ${website.name}, that means keeping the article useful first, then connecting the advice back to the offer in a way that feels credible.`
     );
     markdownParts.push("");
     markdownParts.push(`${plan.cta}.`);
@@ -384,9 +391,11 @@ export class DraftGeneratorService {
         faqJson,
         internalLinksJson
       },
-      plan
+      plan,
+      analysis
     );
-    const status = readinessScore >= 82 ? "review" : "drafting";
+    const wordCount = articleMarkdown.split(/\s+/).filter(Boolean).length;
+    const status = readinessScore >= 78 && analysis?.confidenceLevel !== "low" && wordCount >= 700 ? "review" : "drafting";
 
     return {
       id: existingDraft?.id ?? createId("draft"),

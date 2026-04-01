@@ -1,58 +1,17 @@
 import { WebsiteCrawler } from "../crawlers/websiteCrawler";
+import {
+  computeAnalysisConfidence,
+  extractKeywordsFromSignals,
+  generateMockNicheSummary,
+  mergeExtractedDataFromPages
+} from "../content/analysisInsights";
 import { analysisRepository } from "../repositories/analysisRepository";
 import { websitePageRepository, websiteRepository } from "../repositories/websiteRepository";
 import { ExtractedWebsiteData, Website, WebsiteAnalysisRun, WebsitePage } from "../types";
 import { createId } from "../utils/ids";
 
-const STOP_WORDS = new Set([
-  "the",
-  "and",
-  "for",
-  "with",
-  "that",
-  "from",
-  "this",
-  "your",
-  "about",
-  "into",
-  "what",
-  "when",
-  "where",
-  "have",
-  "will",
-  "best",
-  "guide"
-]);
-
 export class AnalysisService {
   private readonly crawler = new WebsiteCrawler();
-
-  private extractKeywords(title: string, h1: string, h2Headings: string[]): string[] {
-    const counts = new Map<string, number>();
-    const segments = [title, h1, ...h2Headings];
-
-    for (const segment of segments) {
-      for (const token of segment.toLowerCase().split(/[^a-z0-9]+/)) {
-        if (!token || token.length < 4 || STOP_WORDS.has(token)) {
-          continue;
-        }
-
-        counts.set(token, (counts.get(token) ?? 0) + 1);
-      }
-    }
-
-    return [...counts.entries()]
-      .sort((left, right) => right[1] - left[1])
-      .slice(0, 8)
-      .map(([token]) => token);
-  }
-
-  private generateMockNicheSummary(website: Website, extractedData: ExtractedWebsiteData, keywords: string[]): string {
-    const dominantKeyword = keywords[0] ?? website.niche.toLowerCase();
-    const h2Summary = extractedData.h2Headings.slice(0, 2).join(", ").toLowerCase();
-
-    return `${website.name} appears to be focused on ${dominantKeyword} and related topics for ${website.targetCountry}. The homepage messaging emphasizes ${extractedData.h1.toLowerCase()}, while the supporting sections cover ${h2Summary || website.niche.toLowerCase()}.`;
-  }
 
   async analyzeWebsite(websiteId: string): Promise<{ analysis: WebsiteAnalysisRun; pages: WebsitePage[] }> {
     const website = websiteRepository.getById(websiteId);
@@ -60,31 +19,23 @@ export class AnalysisService {
       throw new Error("Website not found.");
     }
 
-    const extractedPage = (await this.crawler.analyzeUrl(website.domain)) ?? this.crawler.buildFallbackForWebsite(website);
-    const extractedData: ExtractedWebsiteData = {
-      url: extractedPage.url,
-      title: extractedPage.title,
-      metaDescription: extractedPage.metaDescription,
-      h1: extractedPage.h1,
-      h2Headings: extractedPage.h2Headings,
-      mainTextContent: extractedPage.contentExtract
-    };
-    const keywords = this.extractKeywords(extractedData.title, extractedData.h1, extractedData.h2Headings);
+    const crawledPages = await this.crawler.crawlWebsite(website);
+    const extractedData: ExtractedWebsiteData = mergeExtractedDataFromPages(crawledPages, website.name);
+    const keywords = extractKeywordsFromSignals(extractedData.title, extractedData.h1, extractedData.h2Headings, website.language);
+    const confidence = computeAnalysisConfidence(crawledPages, extractedData);
 
-    const pages: WebsitePage[] = [
-      {
+    const pages: WebsitePage[] = crawledPages.map((page) => ({
       id: createId("page"),
       websiteId,
-      url: extractedPage.url,
-      title: extractedPage.title,
-      metaDescription: extractedPage.metaDescription,
-      h1: extractedPage.h1,
-      headingsJson: extractedPage.h2Headings,
-      contentExtract: extractedPage.contentExtract,
-      pageType: extractedPage.pageType,
+      url: page.url,
+      title: page.title,
+      metaDescription: page.metaDescription,
+      h1: page.h1,
+      headingsJson: page.h2Headings,
+      contentExtract: page.contentExtract,
+      pageType: page.pageType,
       createdAt: new Date().toISOString()
-    }
-    ];
+    }));
 
     websitePageRepository.replaceForWebsite(websiteId, pages);
 
@@ -96,11 +47,13 @@ export class AnalysisService {
     const analysis: WebsiteAnalysisRun = {
       id: createId("analysis"),
       websiteId,
-      nicheSummary: this.generateMockNicheSummary(website, extractedData, keywords),
+      nicheSummary: generateMockNicheSummary(website, extractedData, keywords),
       contentPillarsJson: keywords,
       keywordsJson: keywords,
       extractedDataJson: extractedData,
       analyzedPageCount: pages.length,
+      confidenceLevel: confidence.confidenceLevel,
+      confidenceScore: confidence.confidenceScore,
       status: "analyzed",
       createdAt: new Date().toISOString()
     };

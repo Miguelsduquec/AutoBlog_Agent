@@ -5,7 +5,7 @@ import { MetricCard } from "../components/MetricCard";
 import { SectionCard } from "../components/SectionCard";
 import { StatusBadge } from "../components/StatusBadge";
 import { useAsyncData } from "../hooks/useAsyncData";
-import { AutomationRunRequest } from "../types";
+import { AutomationRunRequest, WebsiteAnalysisRun } from "../types";
 import { formatDate } from "../utils/format";
 
 const defaultAutomationOptions: AutomationRunRequest = {
@@ -15,20 +15,40 @@ const defaultAutomationOptions: AutomationRunRequest = {
   exportDrafts: false
 };
 
+function confidenceCopy(analysis: WebsiteAnalysisRun | null): string {
+  if (!analysis) {
+    return "Run analysis to measure how much useful website context was captured.";
+  }
+
+  if (analysis.confidenceLevel === "high") {
+    return "The system captured enough page depth and structure to generate opportunities normally.";
+  }
+
+  if (analysis.confidenceLevel === "medium") {
+    return "The analysis is usable, but the website only exposed partial signals. Review generated ideas before planning.";
+  }
+
+  return "The analysis is weak. Re-run it after checking the website URL or using a richer site before generating opportunities.";
+}
+
 export function WebsiteDetailPage() {
   const { websiteId = "" } = useParams();
   const detailQuery = useAsyncData(() => api.getWebsiteDetail(websiteId), [websiteId]);
   const [activeAction, setActiveAction] = useState<string>("");
   const [generationMessage, setGenerationMessage] = useState<string>("");
   const [automationMessage, setAutomationMessage] = useState<string>("");
+  const [actionError, setActionError] = useState<string>("");
   const [automationPanelOpen, setAutomationPanelOpen] = useState(false);
   const [automationOptions, setAutomationOptions] = useState<AutomationRunRequest>(defaultAutomationOptions);
 
   async function runAction(actionKey: string, task: () => Promise<unknown>) {
     setActiveAction(actionKey);
+    setActionError("");
     try {
       await task();
       await detailQuery.refresh();
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Something went wrong.");
     } finally {
       setActiveAction("");
     }
@@ -51,6 +71,7 @@ export function WebsiteDetailPage() {
   }
 
   const { website, latestAnalysis, latestAudit, latestDrafts, latestOpportunities, pages } = detailQuery.data;
+  const opportunityBlocked = !latestAnalysis || latestAnalysis.confidenceLevel === "low";
 
   return (
     <div className="page-stack">
@@ -68,7 +89,7 @@ export function WebsiteDetailPage() {
           </button>
           <button
             className="button secondary"
-            disabled={!latestAnalysis || activeAction === "opportunities"}
+            disabled={opportunityBlocked || activeAction === "opportunities"}
             onClick={() =>
               runAction("opportunities", async () => {
                 const result = await api.generateOpportunities(website.id, 10);
@@ -89,6 +110,18 @@ export function WebsiteDetailPage() {
 
       {generationMessage ? <div className="state-card">{generationMessage}</div> : null}
       {automationMessage ? <div className="state-card">{automationMessage}</div> : null}
+      {actionError ? <div className="state-card error">{actionError}</div> : null}
+      {latestAnalysis ? (
+        <div className={`state-card ${latestAnalysis.confidenceLevel === "low" ? "warning" : ""}`}>
+          <div className="list-card-top">
+            <strong>Analysis confidence</strong>
+            <StatusBadge value={latestAnalysis.confidenceLevel} />
+          </div>
+          <p>
+            Score {latestAnalysis.confidenceScore}/100. {confidenceCopy(latestAnalysis)}
+          </p>
+        </div>
+      ) : null}
 
       {automationPanelOpen ? (
         <SectionCard
@@ -192,7 +225,7 @@ export function WebsiteDetailPage() {
       ) : null}
 
       <div className="metrics-grid three-up">
-        <MetricCard title="Pages analyzed" value={pages.length} help="Tracked key pages in the website profile" />
+        <MetricCard title="Pages analyzed" value={latestAnalysis?.analyzedPageCount ?? pages.length} help="Tracked key pages in the website profile" />
         <MetricCard title="Latest audit score" value={latestAudit?.score ?? "Not run"} help="SEO and content health snapshot" />
         <MetricCard
           title="Latest drafts"
@@ -236,7 +269,7 @@ export function WebsiteDetailPage() {
       </div>
 
       <div className="grid-two">
-        <SectionCard title="Extracted data" description="Raw homepage signals captured during the latest website analysis.">
+        <SectionCard title="Extracted data" description="Merged signals from the highest-value pages captured during the latest analysis.">
           {latestAnalysis ? (
             <div className="detail-list">
               <div>
@@ -255,13 +288,17 @@ export function WebsiteDetailPage() {
                 <strong>H2 headings</strong>
                 <span>{latestAnalysis.extractedDataJson.h2Headings.join(" • ") || "Not found"}</span>
               </div>
+              <div>
+                <strong>Main text</strong>
+                <span>{latestAnalysis.extractedDataJson.mainTextContent || "Not found"}</span>
+              </div>
             </div>
           ) : (
             <p className="muted-copy">No extracted data available yet.</p>
           )}
         </SectionCard>
 
-        <SectionCard title="Niche summary" description="Simple mock-AI interpretation based on the extracted homepage content.">
+        <SectionCard title="Niche summary" description="Mock-AI interpretation based on the merged website content profile.">
           {latestAnalysis ? (
             <div className="stack-list">
               <p className="detail-summary">{latestAnalysis.nicheSummary}</p>
@@ -278,6 +315,38 @@ export function WebsiteDetailPage() {
           )}
         </SectionCard>
       </div>
+
+      <SectionCard title="Analyzed pages" description="The pages currently contributing to the website context and confidence score.">
+        {pages.length === 0 ? (
+          <p className="muted-copy">No analyzed pages stored yet.</p>
+        ) : (
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Page</th>
+                <th>Type</th>
+                <th>H1</th>
+                <th>Headings</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pages.map((page) => (
+                <tr key={page.id}>
+                  <td>
+                    <div>{page.title}</div>
+                    <div className="table-subtext">{page.url}</div>
+                  </td>
+                  <td>
+                    <StatusBadge value={page.pageType} />
+                  </td>
+                  <td>{page.h1 || "Missing"}</td>
+                  <td>{page.headingsJson.join(" • ") || "Missing"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </SectionCard>
 
       <SectionCard title="Main text content" description="Basic extracted body content from the analyzed URL.">
         {latestAnalysis ? (

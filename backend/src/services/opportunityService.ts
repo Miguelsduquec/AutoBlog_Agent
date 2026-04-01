@@ -49,10 +49,6 @@ export class OpportunityService {
     return true;
   }
 
-  generateForWebsite(websiteId: string, limit = 8): ContentOpportunity[] {
-    return this.generator.generateForWebsite(websiteId, limit).createdOpportunities;
-  }
-
   generateFromLatestAnalysis(websiteId: string, limit = 10): OpportunityGenerationResult {
     return this.generator.generateForWebsite(websiteId, limit);
   }

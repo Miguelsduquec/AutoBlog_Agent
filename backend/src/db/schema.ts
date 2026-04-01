@@ -38,6 +38,8 @@ export const schemaStatements = [
       keywords_json TEXT NOT NULL DEFAULT '[]',
       extracted_data_json TEXT NOT NULL DEFAULT '{}',
       analyzed_page_count INTEGER NOT NULL,
+      confidence_level TEXT NOT NULL DEFAULT 'low',
+      confidence_score INTEGER NOT NULL DEFAULT 0,
       status TEXT NOT NULL,
       created_at TEXT NOT NULL,
       FOREIGN KEY (website_id) REFERENCES websites(id) ON DELETE CASCADE

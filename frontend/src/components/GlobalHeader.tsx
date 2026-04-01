@@ -18,6 +18,7 @@ export function GlobalHeader({ inApp = false }: GlobalHeaderProps) {
       <div className="landing-nav-links">
         <a href={sectionHref(inApp, "how-it-works")}>How it works</a>
         <a href={sectionHref(inApp, "features")}>Features</a>
+        <Link to="/tools/content-gap-grader">Free tool</Link>
         <a href={sectionHref(inApp, "pricing")}>Pricing</a>
         <Link className="button secondary" to="/app/dashboard">
           Open app

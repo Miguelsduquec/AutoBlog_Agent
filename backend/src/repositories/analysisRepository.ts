@@ -27,8 +27,8 @@ export const analysisRepository = {
   create(run: WebsiteAnalysisRun): WebsiteAnalysisRun {
     db.prepare(`
       INSERT INTO website_analysis_runs (
-        id, website_id, niche_summary, content_pillars_json, keywords_json, extracted_data_json, analyzed_page_count, status, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        id, website_id, niche_summary, content_pillars_json, keywords_json, extracted_data_json, analyzed_page_count, confidence_level, confidence_score, status, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       run.id,
       run.websiteId,
@@ -37,6 +37,8 @@ export const analysisRepository = {
       JSON.stringify(run.keywordsJson),
       JSON.stringify(run.extractedDataJson),
       run.analyzedPageCount,
+      run.confidenceLevel,
+      run.confidenceScore,
       run.status,
       run.createdAt
     );

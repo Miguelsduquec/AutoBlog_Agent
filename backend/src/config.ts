@@ -21,5 +21,6 @@ export const config = {
   port: Number(process.env.PORT ?? 3001),
   dbPath: resolveFromRepo(process.env.DB_PATH ?? "./backend/data/autoblog-agent.db"),
   exportsDir: resolveFromRepo(process.env.EXPORTS_DIR ?? "./backend/output"),
+  seedOnBoot: process.env.SEED_ON_BOOT === "true",
   openAiApiKey: process.env.OPENAI_API_KEY ?? ""
 };

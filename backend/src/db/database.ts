@@ -26,10 +26,57 @@ function ensureColumn(tableName: string, columnName: string, definition: string)
   }
 }
 
+function ensureIndex(statement: string): void {
+  sqlite.exec(statement);
+}
+
+function ensureUniqueIndex(statement: string, label: string): void {
+  try {
+    sqlite.exec(statement);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : "Unknown migration error";
+    console.warn(`Skipped unique index ${label}: ${detail}`);
+  }
+}
+
 ensureColumn("website_analysis_runs", "keywords_json", "TEXT NOT NULL DEFAULT '[]'");
 ensureColumn("website_analysis_runs", "extracted_data_json", "TEXT NOT NULL DEFAULT '{}'");
+ensureColumn("website_analysis_runs", "confidence_level", "TEXT NOT NULL DEFAULT 'low'");
+ensureColumn("website_analysis_runs", "confidence_score", "INTEGER NOT NULL DEFAULT 0");
 ensureColumn("content_opportunities", "topic", "TEXT NOT NULL DEFAULT ''");
 ensureColumn("article_plans", "search_intent", "TEXT NOT NULL DEFAULT 'informational'");
 ensureColumn("automation_runs", "updated_at", "TEXT NOT NULL DEFAULT ''");
+
+ensureIndex(
+  "CREATE INDEX IF NOT EXISTS idx_analysis_runs_website_created ON website_analysis_runs (website_id, created_at DESC)"
+);
+ensureIndex(
+  "CREATE INDEX IF NOT EXISTS idx_content_opportunities_website_created ON content_opportunities (website_id, created_at DESC)"
+);
+ensureIndex(
+  "CREATE INDEX IF NOT EXISTS idx_article_plans_website_created ON article_plans (website_id, created_at DESC)"
+);
+ensureIndex("CREATE INDEX IF NOT EXISTS idx_article_plans_opportunity_id ON article_plans (opportunity_id)");
+ensureIndex("CREATE INDEX IF NOT EXISTS idx_drafts_website_created ON drafts (website_id, created_at DESC)");
+ensureIndex("CREATE INDEX IF NOT EXISTS idx_drafts_article_plan_id ON drafts (article_plan_id)");
+ensureIndex("CREATE INDEX IF NOT EXISTS idx_export_jobs_website_created ON export_jobs (website_id, created_at DESC)");
+ensureIndex("CREATE INDEX IF NOT EXISTS idx_export_jobs_draft_id ON export_jobs (draft_id)");
+
+ensureUniqueIndex(
+  "CREATE UNIQUE INDEX IF NOT EXISTS idx_content_opportunities_website_keyword_unique ON content_opportunities (website_id, keyword COLLATE NOCASE)",
+  "idx_content_opportunities_website_keyword_unique"
+);
+ensureUniqueIndex(
+  "CREATE UNIQUE INDEX IF NOT EXISTS idx_article_plans_opportunity_unique ON article_plans (opportunity_id) WHERE opportunity_id IS NOT NULL",
+  "idx_article_plans_opportunity_unique"
+);
+ensureUniqueIndex(
+  "CREATE UNIQUE INDEX IF NOT EXISTS idx_drafts_article_plan_unique ON drafts (article_plan_id)",
+  "idx_drafts_article_plan_unique"
+);
+ensureUniqueIndex(
+  "CREATE UNIQUE INDEX IF NOT EXISTS idx_export_jobs_draft_unique ON export_jobs (draft_id)",
+  "idx_export_jobs_draft_unique"
+);
 
 export const db = sqlite;

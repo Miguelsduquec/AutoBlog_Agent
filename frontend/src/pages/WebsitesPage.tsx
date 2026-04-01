@@ -24,6 +24,7 @@ export function WebsitesPage() {
   const [formState, setFormState] = useState<WebsiteInput>(initialWebsiteForm);
   const [editingWebsite, setEditingWebsite] = useState<Website | null>(null);
   const [submitting, setSubmitting] = useState<boolean>(false);
+  const [formError, setFormError] = useState<string>("");
 
   const websiteCountLabel = useMemo(() => websitesQuery.data?.length ?? 0, [websitesQuery.data]);
 
@@ -49,6 +50,7 @@ export function WebsitesPage() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitting(true);
+    setFormError("");
 
     try {
       if (editingWebsite) {
@@ -59,6 +61,8 @@ export function WebsitesPage() {
 
       resetForm();
       await websitesQuery.refresh();
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : "Unable to save the website.");
     } finally {
       setSubmitting(false);
     }
@@ -94,6 +98,8 @@ export function WebsitesPage() {
         </div>
         <div className="topbar-pill">{websiteCountLabel} websites</div>
       </div>
+
+      {formError ? <div className="state-card error">{formError}</div> : null}
 
       <div className="grid-two wide-right">
         <SectionCard title="Tracked websites" description="Each website becomes its own analysis, opportunity, and drafting workspace.">

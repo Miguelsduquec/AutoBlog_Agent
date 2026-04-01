@@ -1,24 +1,14 @@
-import { CONTENT_PROMPTS } from "../agent/prompts/contentPrompts";
 import { ArticlePlan, ContentOpportunity, OpportunityIntent, Website, WebsiteAnalysisRun } from "../types";
 import { createId } from "../utils/ids";
-
-function titleCase(input: string): string {
-  return input
-    .split(/\s+/)
-    .map((word) => (word ? word[0].toUpperCase() + word.slice(1) : word))
-    .join(" ");
-}
-
-function normalize(input: string): string {
-  return input.toLowerCase().replace(/[^a-z0-9\s]+/g, " ").replace(/\s+/g, " ").trim();
-}
+import { formatKeywordAsTopic, normalizeText, titleCase } from "../utils/text";
+import { buildContentCta, inferAudience } from "./contentHeuristics";
 
 function dedupe(values: string[]): string[] {
   const seen = new Set<string>();
   const output: string[] = [];
 
   for (const value of values) {
-    const normalized = normalize(value);
+    const normalized = normalizeText(value);
     if (!normalized || seen.has(normalized)) {
       continue;
     }
@@ -36,26 +26,9 @@ function basePhrase(opportunity: ContentOpportunity): string {
     return topic.replace(/[?]/g, "").trim();
   }
 
-  return titleCase(opportunity.keyword);
-}
-
-function detectAudience(website: Website, analysis: WebsiteAnalysisRun | null): string {
-  const corpus = normalize(`${website.niche} ${website.contentGoal} ${analysis?.nicheSummary ?? ""}`);
-
-  if (corpus.includes("finance")) {
-    return "finance teams";
-  }
-  if (corpus.includes("small business") || corpus.includes("smb")) {
-    return "small businesses";
-  }
-  if (corpus.includes("landscape") || corpus.includes("garden")) {
-    return "homeowners";
-  }
-  if (corpus.includes("consult")) {
-    return "business teams";
-  }
-
-  return "buyers";
+  return formatKeywordAsTopic(opportunity.keyword)
+    .replace(/\bServices In\b/g, "Services in")
+    .replace(/\bVs\b/g, "vs");
 }
 
 function buildTitle(
@@ -65,7 +38,7 @@ function buildTitle(
   audience: string
 ): string {
   const phrase = basePhrase(opportunity);
-  const keyword = normalize(opportunity.keyword);
+  const keyword = normalizeText(opportunity.keyword);
 
   if (opportunity.intent === "comparison") {
     return phrase.includes("vs") ? phrase : `${phrase}: Which Option Fits ${titleCase(audience)}?`;
@@ -82,7 +55,7 @@ function buildTitle(
     if (keyword.includes("cost")) {
       return `${phrase}: What ${titleCase(audience)} Should Budget For`;
     }
-    return `How ${titleCase(audience)} Evaluate ${phrase}`;
+    return `How ${titleCase(audience)} Can Evaluate ${phrase}`;
   }
 
   if (keyword.startsWith("what is")) {
@@ -94,7 +67,7 @@ function buildTitle(
   }
 
   const supportKeyword = analysis?.keywordsJson[0];
-  if (supportKeyword && !normalize(phrase).includes(normalize(supportKeyword))) {
+  if (supportKeyword && !normalizeText(phrase).includes(normalizeText(supportKeyword))) {
     return `${phrase}: Practical Advice for ${titleCase(supportKeyword)} Teams`;
   }
 
@@ -106,8 +79,8 @@ function buildSecondaryKeywords(
   analysis: WebsiteAnalysisRun | null,
   website: Website
 ): string[] {
-  const keyword = normalize(opportunity.keyword);
-  const cluster = normalize(opportunity.cluster);
+  const keyword = normalizeText(opportunity.keyword);
+  const cluster = normalizeText(opportunity.cluster);
   const base = keyword.replace(/^(what is|how to use|best|benefits of|common mistakes with)\s+/g, "").trim();
   const country = website.targetCountry.toLowerCase();
   const analysisKeywords = analysis?.keywordsJson.slice(0, 3) ?? [];
@@ -124,7 +97,11 @@ function buildSecondaryKeywords(
     ...analysisKeywords.map((item) => `${item} ${base}`.trim())
   ];
 
-  return dedupe(candidates).filter((candidate) => normalize(candidate) !== keyword).slice(0, 6);
+  return dedupe(candidates)
+    .map((candidate) => candidate.replace(/\b(checklist)\s+\1\b/gi, "$1"))
+    .filter((candidate) => normalizeText(candidate) !== keyword)
+    .filter((candidate) => new Set(normalizeText(candidate).split(" ").filter(Boolean)).size >= 2)
+    .slice(0, 6);
 }
 
 function buildAngle(
@@ -151,22 +128,7 @@ function buildAngle(
 }
 
 function buildCta(website: Website): string {
-  const goal = normalize(website.contentGoal);
-
-  if (goal.includes("demo") || goal.includes("walkthrough") || goal.includes("software")) {
-    return "Request a demo";
-  }
-  if (goal.includes("quote") || goal.includes("local") || goal.includes("project")) {
-    return "Request a quote";
-  }
-  if (goal.includes("design consultation")) {
-    return "Book a design consultation";
-  }
-  if (goal.includes("lead") || goal.includes("consult") || goal.includes("qualified")) {
-    return "Book a consultation";
-  }
-
-  return `Talk to ${website.name}`;
+  return buildContentCta(website);
 }
 
 function buildCoveragePoints(intent: OpportunityIntent): string {
@@ -205,7 +167,7 @@ export class ArticlePlannerService {
     analysis: WebsiteAnalysisRun | null,
     existingPlan?: ArticlePlan | null
   ): ArticlePlan {
-    const audience = detectAudience(website, analysis);
+    const audience = inferAudience(website, analysis);
     const title = buildTitle(opportunity, website, analysis, audience);
     const secondaryKeywordsJson = buildSecondaryKeywords(opportunity, analysis, website);
     const cta = buildCta(website);
@@ -218,7 +180,7 @@ export class ArticlePlannerService {
       targetKeyword: opportunity.keyword,
       secondaryKeywordsJson,
       searchIntent: opportunity.intent,
-      angle: `${CONTENT_PROMPTS.planningAngle} ${buildAngle(opportunity, website, analysis, audience)}`,
+      angle: buildAngle(opportunity, website, analysis, audience),
       cta,
       brief: buildBrief(opportunity, website, analysis, secondaryKeywordsJson, cta),
       status: "planned",

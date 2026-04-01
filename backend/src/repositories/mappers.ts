@@ -1,4 +1,5 @@
 import {
+  AnalysisConfidenceLevel,
   ArticlePlan,
   AutomationRun,
   AutomationRunSummary,
@@ -21,7 +22,8 @@ const defaultExtractedData: ExtractedWebsiteData = {
   metaDescription: "",
   h1: "",
   h2Headings: [],
-  mainTextContent: ""
+  mainTextContent: "",
+  pageSignals: []
 };
 
 const defaultAutomationSummary: AutomationRunSummary = {
@@ -96,8 +98,34 @@ function normalizeExtractedData(value: unknown): ExtractedWebsiteData {
     metaDescription: String(record.metaDescription ?? record.meta_description ?? ""),
     h1: String(record.h1 ?? ""),
     h2Headings,
-    mainTextContent: String(record.mainTextContent ?? record.contentExtract ?? record.content_extract ?? "")
+    mainTextContent: String(record.mainTextContent ?? record.contentExtract ?? record.content_extract ?? ""),
+    pageSignals: Array.isArray(record.pageSignals)
+      ? record.pageSignals
+          .filter((item) => item && typeof item === "object")
+          .map((item) => {
+            const signal = item as Record<string, unknown>;
+            return {
+              url: String(signal.url ?? ""),
+              title: String(signal.title ?? ""),
+              h1: String(signal.h1 ?? ""),
+              pageType: String(signal.pageType ?? signal.page_type ?? "page"),
+              h2Headings: Array.isArray(signal.h2Headings)
+                ? signal.h2Headings.map((heading) => String(heading))
+                : [],
+              contentExtract: String(signal.contentExtract ?? signal.content_extract ?? "")
+            };
+          })
+      : []
   };
+}
+
+function normalizeConfidenceLevel(value: unknown): AnalysisConfidenceLevel {
+  const normalized = String(value ?? "low").toLowerCase();
+  if (normalized === "medium" || normalized === "high") {
+    return normalized;
+  }
+
+  return "low";
 }
 
 function normalizeAutomationSummary(value: unknown): AutomationRunSummary {
@@ -179,6 +207,8 @@ export function mapAnalysisRun(row: Row): WebsiteAnalysisRun {
     keywordsJson: parseJsonArray<string[]>(String(row.keywords_json ?? "[]"), []),
     extractedDataJson: normalizeExtractedData(extractedData),
     analyzedPageCount: Number(row.analyzed_page_count),
+    confidenceLevel: normalizeConfidenceLevel(row.confidence_level),
+    confidenceScore: Number(row.confidence_score ?? 0),
     status: String(row.status) as WebsiteAnalysisRun["status"],
     createdAt: String(row.created_at)
   };
