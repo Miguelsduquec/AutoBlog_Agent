@@ -2,20 +2,35 @@ import { AutomationOrchestrator, createEmptyAutomationSummary, normalizeAutomati
 import { automationRunRepository } from "../repositories/operationsRepository";
 import { AutomationRun, AutomationRunRequest } from "../types";
 import { createId } from "../utils/ids";
+import { websiteRepository } from "../repositories/websiteRepository";
+import { HttpError } from "../utils/errors";
 
 export class AutomationRunService {
   private readonly orchestrator = new AutomationOrchestrator();
 
-  listRuns(websiteId?: string): AutomationRun[] {
-    return automationRunRepository.list(websiteId);
+  listRuns(userId: string, websiteId?: string): AutomationRun[] {
+    if (websiteId) {
+      this.requireOwnedWebsite(userId, websiteId);
+      return automationRunRepository.list(websiteId);
+    }
+
+    const websiteIds = new Set(websiteRepository.list(userId).map((website) => website.id));
+    return automationRunRepository.list().filter((run) => websiteIds.has(run.websiteId));
   }
 
-  getRun(id: string): AutomationRun | null {
-    return automationRunRepository.getById(id);
+  getRun(userId: string, id: string): AutomationRun | null {
+    const run = automationRunRepository.getById(id);
+    if (!run || !websiteRepository.getByIdForUser(run.websiteId, userId)) {
+      return null;
+    }
+
+    return run;
   }
 
-  async triggerRun(websiteId: string, input?: Partial<AutomationRunRequest>): Promise<AutomationRun> {
+  async triggerRun(userId: string, websiteId: string, input?: Partial<AutomationRunRequest>): Promise<AutomationRun> {
+    this.requireOwnedWebsite(userId, websiteId);
     const options = normalizeAutomationOptions(input);
+
     const now = new Date().toISOString();
 
     const run: AutomationRun = {
@@ -42,7 +57,7 @@ export class AutomationRunService {
     automationRunRepository.update(runningRun);
 
     try {
-      const result = await this.orchestrator.run(websiteId, options);
+      const result = await this.orchestrator.run(userId, websiteId, options);
       const completedRun: AutomationRun = {
         ...runningRun,
         status: result.status,
@@ -72,5 +87,14 @@ export class AutomationRunService {
       automationRunRepository.update(failedRun);
       return failedRun;
     }
+  }
+
+  private requireOwnedWebsite(userId: string, websiteId: string) {
+    const website = websiteRepository.getByIdForUser(websiteId, userId);
+    if (!website) {
+      throw new HttpError(404, "Website not found.");
+    }
+
+    return website;
   }
 }

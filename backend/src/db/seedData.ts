@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import {
   ArticlePlan,
   AutomationRun,
@@ -5,10 +6,22 @@ import {
   Draft,
   ExportJob,
   SeoAuditRun,
+  Subscription,
+  User,
   Website,
   WebsiteAnalysisRun,
   WebsitePage
 } from "../types";
+
+export const DEMO_USER_ID = "user-demo";
+export const DEMO_USER_EMAIL = "demo@autoblog-agent.local";
+export const DEMO_USER_PASSWORD = "demo12345";
+
+function seedPasswordHash(password: string): string {
+  const salt = "seed-demo-salt";
+  const digest = crypto.scryptSync(password, salt, 64).toString("hex");
+  return `${salt}:${digest}`;
+}
 
 function hoursAgo(hours: number): string {
   return new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
@@ -19,6 +32,8 @@ function daysAgo(days: number): string {
 }
 
 export function getSeedData(): {
+  users: User[];
+  subscriptions: Subscription[];
   websites: Website[];
   pages: WebsitePage[];
   analysisRuns: WebsiteAnalysisRun[];
@@ -29,9 +44,37 @@ export function getSeedData(): {
   automationRuns: AutomationRun[];
   exportJobs: ExportJob[];
 } {
+  const users: User[] = [
+    {
+      id: DEMO_USER_ID,
+      email: DEMO_USER_EMAIL,
+      name: "Demo User",
+      passwordHash: seedPasswordHash(DEMO_USER_PASSWORD),
+      stripeCustomerId: "cus_demo_autoblog",
+      createdAt: daysAgo(30),
+      updatedAt: hoursAgo(2)
+    }
+  ];
+
+  const subscriptions: Subscription[] = [
+    {
+      id: "sub-demo",
+      userId: DEMO_USER_ID,
+      stripeCustomerId: "cus_demo_autoblog",
+      stripeSubscriptionId: "sub_demo_autoblog",
+      stripePriceId: "price_demo_monthly",
+      stripeCheckoutSessionId: "cs_demo_autoblog",
+      status: "active",
+      currentPeriodEnd: daysAgo(-14),
+      createdAt: daysAgo(30),
+      updatedAt: hoursAgo(2)
+    }
+  ];
+
   const websites: Website[] = [
     {
       id: "site-polped",
+      userId: DEMO_USER_ID,
       name: "Polped",
       domain: "https://polped.com",
       language: "Portuguese",
@@ -45,6 +88,7 @@ export function getSeedData(): {
     },
     {
       id: "site-finnova",
+      userId: DEMO_USER_ID,
       name: "Finnova Ops",
       domain: "https://finnovaops.com",
       language: "English",
@@ -58,6 +102,7 @@ export function getSeedData(): {
     },
     {
       id: "site-greenforge",
+      userId: DEMO_USER_ID,
       name: "Greenforge Landscapes",
       domain: "https://greenforge-landscapes.com",
       language: "English",
@@ -664,6 +709,8 @@ export function getSeedData(): {
   ];
 
   return {
+    users,
+    subscriptions,
     websites,
     pages,
     analysisRuns,

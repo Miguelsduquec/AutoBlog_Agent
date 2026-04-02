@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { useAccessGateRedirect } from "../access/useAccessGateRedirect";
 import { api } from "../api/client";
 import { MetricCard } from "../components/MetricCard";
 import { SectionCard } from "../components/SectionCard";
 import { StatusBadge } from "../components/StatusBadge";
+import { TableShell } from "../components/TableShell";
 import { useAsyncData } from "../hooks/useAsyncData";
 import { AutomationRunRequest, WebsiteAnalysisRun } from "../types";
 import { formatDate } from "../utils/format";
@@ -17,21 +19,22 @@ const defaultAutomationOptions: AutomationRunRequest = {
 
 function confidenceCopy(analysis: WebsiteAnalysisRun | null): string {
   if (!analysis) {
-    return "Run analysis to measure how much useful website context was captured.";
+    return "Run analysis to see how much useful context was captured.";
   }
 
   if (analysis.confidenceLevel === "high") {
-    return "The system captured enough page depth and structure to generate opportunities normally.";
+    return "Enough page depth was captured to generate topics normally.";
   }
 
   if (analysis.confidenceLevel === "medium") {
-    return "The analysis is usable, but the website only exposed partial signals. Review generated ideas before planning.";
+    return "The scan is usable, but the site only exposed partial signals.";
   }
 
-  return "The analysis is weak. Re-run it after checking the website URL or using a richer site before generating opportunities.";
+  return "The scan is weak. Check the URL or use a richer site before generating topics.";
 }
 
 export function WebsiteDetailPage() {
+  const handleAccessError = useAccessGateRedirect();
   const { websiteId = "" } = useParams();
   const detailQuery = useAsyncData(() => api.getWebsiteDetail(websiteId), [websiteId]);
   const [activeAction, setActiveAction] = useState<string>("");
@@ -48,6 +51,10 @@ export function WebsiteDetailPage() {
       await task();
       await detailQuery.refresh();
     } catch (error) {
+      if (handleAccessError(error)) {
+        return;
+      }
+
       setActionError(error instanceof Error ? error.message : "Something went wrong.");
     } finally {
       setActiveAction("");
@@ -77,18 +84,22 @@ export function WebsiteDetailPage() {
     <div className="page-stack">
       <div className="page-toolbar">
         <div>
-          <div className="eyebrow">Website workspace</div>
           <h1>{website.name}</h1>
           <p>
             {website.niche} • {website.language} • {website.targetCountry}
           </p>
         </div>
         <div className="toolbar-controls">
-          <button className="button secondary" onClick={() => runAction("analyze", () => api.analyzeWebsite(website.id))}>
-            {activeAction === "analyze" ? "Analyzing…" : "Analyze Website"}
+          <button
+            className="button secondary"
+            data-testid="analyze-website-button"
+            onClick={() => runAction("analyze", () => api.analyzeWebsite(website.id))}
+          >
+            {activeAction === "analyze" ? "Analyzing…" : "Analyze"}
           </button>
           <button
             className="button secondary"
+            data-testid="generate-opportunities-button"
             disabled={opportunityBlocked || activeAction === "opportunities"}
             onClick={() =>
               runAction("opportunities", async () => {
@@ -97,13 +108,13 @@ export function WebsiteDetailPage() {
               })
             }
           >
-            {activeAction === "opportunities" ? "Generating…" : "Generate Opportunities"}
+            {activeAction === "opportunities" ? "Generating…" : "Find topics"}
           </button>
           <button className="button secondary" onClick={() => runAction("audit", () => api.runSeoAudit(website.id))}>
-            {activeAction === "audit" ? "Auditing…" : "Run SEO audit"}
+            {activeAction === "audit" ? "Auditing…" : "SEO audit"}
           </button>
-          <button className="button" onClick={() => setAutomationPanelOpen((current) => !current)}>
-            {automationPanelOpen ? "Close automation" : "Run Automation"}
+          <button className="button" data-testid="run-automation-toggle" onClick={() => setAutomationPanelOpen((current) => !current)}>
+            {automationPanelOpen ? "Close automation" : "Automation"}
           </button>
         </div>
       </div>
@@ -125,8 +136,8 @@ export function WebsiteDetailPage() {
 
       {automationPanelOpen ? (
         <SectionCard
-          title="Automation run options"
-          description="Run a focused step or a full multi-step content pipeline for this website."
+          title="Automation"
+          description="Run one step or the full pipeline."
           actions={
             <div className="form-actions">
               <button
@@ -138,10 +149,11 @@ export function WebsiteDetailPage() {
               </button>
               <button
                 className="button"
+                data-testid="automation-submit-button"
                 disabled={activeAction === "automation"}
                 onClick={() => void handleAutomationRun(website.id)}
               >
-                {activeAction === "automation" ? "Running…" : "Start run"}
+                {activeAction === "automation" ? "Running…" : "Run"}
               </button>
             </div>
           }
@@ -225,17 +237,17 @@ export function WebsiteDetailPage() {
       ) : null}
 
       <div className="metrics-grid three-up">
-        <MetricCard title="Pages analyzed" value={latestAnalysis?.analyzedPageCount ?? pages.length} help="Tracked key pages in the website profile" />
-        <MetricCard title="Latest audit score" value={latestAudit?.score ?? "Not run"} help="SEO and content health snapshot" />
+        <MetricCard title="Pages analyzed" value={latestAnalysis?.analyzedPageCount ?? pages.length} help="Pages used for context" />
+        <MetricCard title="Latest audit score" value={latestAudit?.score ?? "Not run"} help="Current SEO score" />
         <MetricCard
           title="Latest drafts"
           value={latestDrafts.length}
-          help="Most recent draft count in the website workflow"
+          help="Drafts created recently"
         />
       </div>
 
       <div className="grid-two">
-        <SectionCard title="Summary" description="Core context used by the system to generate niche-relevant content.">
+        <SectionCard title="Summary" description="Core website settings.">
           <div className="detail-list">
             <div>
               <strong>Domain</strong>
@@ -256,7 +268,7 @@ export function WebsiteDetailPage() {
           </div>
         </SectionCard>
 
-        <SectionCard title="Content pillars" description="Latest inferred clusters from website analysis.">
+        <SectionCard title="Content pillars" description="Main themes from the latest scan.">
           <div className="pill-row">
             {(latestAnalysis?.keywordsJson ?? latestAnalysis?.contentPillarsJson ?? []).map((pillar) => (
               <span className="mini-pill" key={pillar}>
@@ -269,7 +281,7 @@ export function WebsiteDetailPage() {
       </div>
 
       <div className="grid-two">
-        <SectionCard title="Extracted data" description="Merged signals from the highest-value pages captured during the latest analysis.">
+        <SectionCard title="Extracted data" description="Main signals from the latest scan.">
           {latestAnalysis ? (
             <div className="detail-list">
               <div>
@@ -298,7 +310,7 @@ export function WebsiteDetailPage() {
           )}
         </SectionCard>
 
-        <SectionCard title="Niche summary" description="Mock-AI interpretation based on the merged website content profile.">
+        <SectionCard title="Niche summary" description="Short summary of what the site appears to do.">
           {latestAnalysis ? (
             <div className="stack-list">
               <p className="detail-summary">{latestAnalysis.nicheSummary}</p>
@@ -316,11 +328,11 @@ export function WebsiteDetailPage() {
         </SectionCard>
       </div>
 
-      <SectionCard title="Analyzed pages" description="The pages currently contributing to the website context and confidence score.">
+      <SectionCard title="Analyzed pages" description="Pages used in the latest scan.">
         {pages.length === 0 ? (
           <p className="muted-copy">No analyzed pages stored yet.</p>
         ) : (
-          <table className="data-table">
+          <TableShell label="Analyzed pages">
             <thead>
               <tr>
                 <th>Page</th>
@@ -344,11 +356,11 @@ export function WebsiteDetailPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </TableShell>
         )}
       </SectionCard>
 
-      <SectionCard title="Main text content" description="Basic extracted body content from the analyzed URL.">
+      <SectionCard title="Main text" description="Extracted body content.">
         {latestAnalysis ? (
           <p className="detail-summary">{latestAnalysis.extractedDataJson.mainTextContent || "No main text content extracted."}</p>
         ) : (
@@ -357,7 +369,7 @@ export function WebsiteDetailPage() {
       </SectionCard>
 
       <div className="grid-two">
-        <SectionCard title="Latest audit" description="Most recent SEO and content audit findings.">
+        <SectionCard title="Latest audit" description="Top issues from the last audit.">
           {latestAudit ? (
             <div className="stack-list">
               <div className="score-banner">
@@ -379,7 +391,7 @@ export function WebsiteDetailPage() {
           )}
         </SectionCard>
 
-        <SectionCard title="Latest opportunities" description="Closest topics to the planning queue.">
+        <SectionCard title="Latest opportunities" description="Topics ready to turn into plans.">
           {latestOpportunities.length > 0 ? (
             <div className="stack-list">
               {latestOpportunities.map((opportunity) => (
@@ -404,9 +416,9 @@ export function WebsiteDetailPage() {
         </SectionCard>
       </div>
 
-      <SectionCard title="Latest drafts" description="Recent generated drafts and readiness state.">
+      <SectionCard title="Latest drafts" description="Recent draft status.">
         {latestDrafts.length > 0 ? (
-          <table className="data-table">
+          <TableShell label="Latest drafts">
             <thead>
               <tr>
                 <th>Slug</th>
@@ -427,7 +439,7 @@ export function WebsiteDetailPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </TableShell>
         ) : (
           <p className="muted-copy">No drafts generated yet.</p>
         )}

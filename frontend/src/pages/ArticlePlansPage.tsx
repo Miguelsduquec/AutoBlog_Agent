@@ -1,8 +1,10 @@
 import { useMemo, useState } from "react";
+import { useAccessGateRedirect } from "../access/useAccessGateRedirect";
 import { api } from "../api/client";
 import { EmptyState } from "../components/EmptyState";
 import { SectionCard } from "../components/SectionCard";
 import { StatusBadge } from "../components/StatusBadge";
+import { TableShell } from "../components/TableShell";
 import { useAsyncData } from "../hooks/useAsyncData";
 import { ArticlePlan, OpportunityIntent, WorkflowStatus } from "../types";
 import { formatDate } from "../utils/format";
@@ -11,6 +13,7 @@ type PlanStatusFilter = WorkflowStatus | "all";
 type PlanIntentFilter = OpportunityIntent | "all";
 
 export function ArticlePlansPage() {
+  const handleAccessError = useAccessGateRedirect();
   const websitesQuery = useAsyncData(api.getWebsites, []);
   const plansQuery = useAsyncData(() => api.getPlans(), []);
   const opportunitiesQuery = useAsyncData(() => api.getOpportunities(), []);
@@ -84,6 +87,12 @@ export function ArticlePlansPage() {
         const refreshed = await api.getPlan(selectedPlan.id).catch(() => null);
         setSelectedPlan(refreshed);
       }
+    } catch (error) {
+      if (handleAccessError(error)) {
+        return;
+      }
+
+      setGenerationMessage(error instanceof Error ? error.message : "Unable to generate plans.");
     } finally {
       setBatchGenerating(false);
     }
@@ -94,10 +103,10 @@ export function ArticlePlansPage() {
       <div className="page-toolbar">
         <div>
           <h1>Article plans</h1>
-          <p>Turn content opportunities into editorial direction before draft generation starts.</p>
+          <p>Shape topics before drafting.</p>
         </div>
         <div className="toolbar-controls">
-          <select value={websiteFilter} onChange={(event) => setWebsiteFilter(event.target.value)}>
+          <select aria-label="Website filter" value={websiteFilter} onChange={(event) => setWebsiteFilter(event.target.value)}>
             <option value="all">All websites</option>
             {websitesQuery.data.map((website) => (
               <option key={website.id} value={website.id}>
@@ -105,7 +114,7 @@ export function ArticlePlansPage() {
               </option>
             ))}
           </select>
-          <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as PlanStatusFilter)}>
+          <select aria-label="Status filter" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as PlanStatusFilter)}>
             <option value="all">All statuses</option>
             <option value="planned">planned</option>
             <option value="drafting">drafting</option>
@@ -113,7 +122,7 @@ export function ArticlePlansPage() {
             <option value="ready">ready</option>
             <option value="failed">failed</option>
           </select>
-          <select value={intentFilter} onChange={(event) => setIntentFilter(event.target.value as PlanIntentFilter)}>
+          <select aria-label="Intent filter" value={intentFilter} onChange={(event) => setIntentFilter(event.target.value as PlanIntentFilter)}>
             <option value="all">All intents</option>
             <option value="informational">informational</option>
             <option value="commercial">commercial</option>
@@ -129,11 +138,11 @@ export function ArticlePlansPage() {
       {generationMessage ? <div className="state-card">{generationMessage}</div> : null}
       {draftMessage ? <div className="state-card">{draftMessage}</div> : null}
 
-      <SectionCard title="Planning queue" description="Structured article plans ready for editorial review and draft generation.">
+      <SectionCard title="Planning queue" description="Saved plans ready for drafts.">
         {filteredPlans.length === 0 ? (
           <EmptyState title="No article plans yet" description="Generate a plan from an opportunity or batch-generate plans for a website." />
         ) : (
-          <table className="data-table">
+          <TableShell label="Planning queue">
             <thead>
               <tr>
                 <th>Title</th>
@@ -175,6 +184,12 @@ export function ArticlePlansPage() {
                           try {
                             const result = await api.generateDraftFromPlan(plan.id);
                             setDraftMessage(result.summaryMessage);
+                          } catch (error) {
+                            if (handleAccessError(error)) {
+                              return;
+                            }
+
+                            setDraftMessage(error instanceof Error ? error.message : "Unable to generate the draft.");
                           } finally {
                             setDraftGenerationId("");
                           }
@@ -191,13 +206,13 @@ export function ArticlePlansPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </TableShell>
         )}
       </SectionCard>
 
       <SectionCard
         title={selectedPlan ? "Plan detail" : "Plan detail"}
-        description="Review the editorial brief, supporting keywords, and source opportunity before generating a draft."
+        description="Review the brief and keywords."
       >
         {detailLoading ? (
           <div className="state-card">Loading plan detail…</div>
@@ -246,7 +261,7 @@ export function ArticlePlansPage() {
             </article>
           </div>
         ) : (
-          <EmptyState title="No plan selected" description="Choose a plan from the table to inspect its editorial brief and supporting keywords." />
+          <EmptyState title="No plan selected" description="Choose a plan to review." />
         )}
       </SectionCard>
     </div>

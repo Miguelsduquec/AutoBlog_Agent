@@ -15,9 +15,11 @@ export type OpportunityIntent = "informational" | "commercial" | "comparison" | 
 export type OpportunityPriority = "low" | "medium" | "high";
 export type OpportunityDifficulty = "low" | "medium" | "high";
 export type AnalysisConfidenceLevel = "low" | "medium" | "high";
+export type SubscriptionStatus = "inactive" | "trialing" | "active" | "past_due" | "canceled" | "unpaid";
 
 export interface Website {
   id: string;
+  userId: string;
   name: string;
   domain: string;
   language: string;
@@ -28,6 +30,73 @@ export interface Website {
   publishingFrequency: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  passwordHash: string;
+  stripeCustomerId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UserSession {
+  id: string;
+  userId: string;
+  token: string;
+  createdAt: string;
+  lastSeenAt: string;
+}
+
+export interface Subscription {
+  id: string;
+  userId: string;
+  stripeCustomerId: string;
+  stripeSubscriptionId: string;
+  stripePriceId: string;
+  stripeCheckoutSessionId: string;
+  status: SubscriptionStatus;
+  currentPeriodEnd: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AuthSnapshot {
+  isAuthenticated: boolean;
+  hasActiveSubscription: boolean;
+  user: AuthUser | null;
+  subscription: Subscription | null;
+}
+
+export interface AuthResponse {
+  sessionToken: string;
+  session: AuthSnapshot;
+}
+
+export interface RegisterInput {
+  email: string;
+  name?: string;
+  password: string;
+}
+
+export interface LoginInput {
+  email: string;
+  password: string;
+}
+
+export interface BillingCheckoutSession {
+  id: string;
+  url: string;
 }
 
 export interface WebsitePage {

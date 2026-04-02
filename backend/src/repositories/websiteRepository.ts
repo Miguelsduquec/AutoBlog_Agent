@@ -3,7 +3,14 @@ import { Website, WebsitePage } from "../types";
 import { mapWebsite, mapWebsitePage } from "./mappers";
 
 export const websiteRepository = {
-  list(): Website[] {
+  list(userId?: string): Website[] {
+    if (userId) {
+      const rows = db
+        .prepare("SELECT * FROM websites WHERE user_id = ? ORDER BY datetime(updated_at) DESC")
+        .all(userId) as Record<string, unknown>[];
+      return rows.map(mapWebsite);
+    }
+
     const rows = db.prepare("SELECT * FROM websites ORDER BY datetime(updated_at) DESC").all() as Record<string, unknown>[];
     return rows.map(mapWebsite);
   },
@@ -13,13 +20,21 @@ export const websiteRepository = {
     return row ? mapWebsite(row) : null;
   },
 
+  getByIdForUser(id: string, userId: string): Website | null {
+    const row = db
+      .prepare("SELECT * FROM websites WHERE id = ? AND user_id = ?")
+      .get(id, userId) as Record<string, unknown> | undefined;
+    return row ? mapWebsite(row) : null;
+  },
+
   create(website: Website): Website {
     db.prepare(`
       INSERT INTO websites (
-        id, name, domain, language, target_country, niche, tone, content_goal, publishing_frequency, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        id, user_id, name, domain, language, target_country, niche, tone, content_goal, publishing_frequency, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       website.id,
+      website.userId,
       website.name,
       website.domain,
       website.language,
@@ -62,6 +77,11 @@ export const websiteRepository = {
 
   count(): number {
     const row = db.prepare("SELECT COUNT(*) AS count FROM websites").get() as { count: number };
+    return row.count;
+  },
+
+  countByUser(userId: string): number {
+    const row = db.prepare("SELECT COUNT(*) AS count FROM websites WHERE user_id = ?").get(userId) as { count: number };
     return row.count;
   }
 };

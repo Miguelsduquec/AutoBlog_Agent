@@ -8,3 +8,5 @@ backend/data/*.db*
 backend/output/*
 frontend/dist
 backend/dist
+playwright-report
+test-results

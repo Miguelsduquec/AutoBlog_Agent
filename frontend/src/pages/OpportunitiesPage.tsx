@@ -1,8 +1,10 @@
 import { FormEvent, useEffect, useState } from "react";
+import { useAccessGateRedirect } from "../access/useAccessGateRedirect";
 import { api } from "../api/client";
 import { EmptyState } from "../components/EmptyState";
 import { SectionCard } from "../components/SectionCard";
 import { StatusBadge } from "../components/StatusBadge";
+import { TableShell } from "../components/TableShell";
 import { WebsiteScopeHeader } from "../components/WebsiteScopeHeader";
 import { useAsyncData } from "../hooks/useAsyncData";
 import { useSelectedWebsite } from "../hooks/useSelectedWebsite";
@@ -22,6 +24,7 @@ const initialOpportunity = (websiteId: string): OpportunityInput => ({
 });
 
 export function OpportunitiesPage() {
+  const handleAccessError = useAccessGateRedirect();
   const websitesQuery = useAsyncData(api.getWebsites, []);
   const [selectedWebsiteId, setSelectedWebsiteId] = useSelectedWebsite(websitesQuery.data);
   const opportunitiesQuery = useAsyncData(
@@ -66,6 +69,10 @@ export function OpportunitiesPage() {
       setPlanMessage(result.summaryMessage);
       await opportunitiesQuery.refresh();
     } catch (error) {
+      if (handleAccessError(error)) {
+        return;
+      }
+
       setGenerationError(error instanceof Error ? error.message : "Unable to generate a plan.");
     } finally {
       setPlanGenerationId("");
@@ -104,13 +111,13 @@ export function OpportunitiesPage() {
     <div className="page-stack">
       <WebsiteScopeHeader
         title="Content opportunities"
-        description="Find niche-relevant topics, track priority, and convert selected opportunities into plans."
+        description="Find topics and turn the best ones into plans."
         websites={websitesQuery.data}
         selectedWebsiteId={selectedWebsiteId}
         onSelectWebsite={setSelectedWebsiteId}
         actions={
           <>
-            <select value={sourceFilter} onChange={(event) => setSourceFilter(event.target.value)}>
+            <select aria-label="Source filter" value={sourceFilter} onChange={(event) => setSourceFilter(event.target.value)}>
               <option value="all">All sources</option>
               {sourceOptions.map((source) => (
                 <option key={source} value={source}>
@@ -120,6 +127,7 @@ export function OpportunitiesPage() {
             </select>
             <button
               className="button secondary"
+              data-testid="opportunities-page-generate-button"
               disabled={!selectedWebsiteId || isGenerating}
               onClick={() =>
                 void (async () => {
@@ -143,8 +151,16 @@ export function OpportunitiesPage() {
               className="button"
               onClick={() =>
                 void (async () => {
-                  await api.generatePlans(selectedWebsiteId, 3);
-                  await opportunitiesQuery.refresh();
+                  try {
+                    await api.generatePlans(selectedWebsiteId, 3);
+                    await opportunitiesQuery.refresh();
+                  } catch (error) {
+                    if (handleAccessError(error)) {
+                      return;
+                    }
+
+                    setGenerationError(error instanceof Error ? error.message : "Unable to batch-generate plans.");
+                  }
                 })()
               }
             >
@@ -159,11 +175,11 @@ export function OpportunitiesPage() {
       {planMessage ? <div className="state-card">{planMessage}</div> : null}
 
       <div className="grid-two wide-right">
-        <SectionCard title="Opportunity queue" description="Keyword opportunities inferred from analysis, audits, and manual input.">
+        <SectionCard title="Opportunity queue" description="Saved topics for this website.">
           {filteredOpportunities.length === 0 ? (
             <EmptyState title="No opportunities yet" description="Run topic discovery or add one manually." />
           ) : (
-            <table className="data-table">
+            <TableShell label="Opportunity queue">
               <thead>
                 <tr>
                   <th>Keyword / topic</th>
@@ -236,11 +252,11 @@ export function OpportunitiesPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </TableShell>
           )}
         </SectionCard>
 
-        <SectionCard title={editing ? "Edit opportunity" : "Add opportunity"} description="Manual curation is useful when operators know the niche better than the current template library.">
+        <SectionCard title={editing ? "Edit opportunity" : "Add opportunity"} description="Add or update a topic manually.">
           <form className="form-grid" onSubmit={handleSubmit}>
             <label className="span-2">
               Keyword

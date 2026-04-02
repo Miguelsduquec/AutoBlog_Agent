@@ -1,13 +1,19 @@
 import {
   AnalysisConfidenceLevel,
   ArticlePlan,
+  AuthSnapshot,
+  AuthUser,
   AutomationRun,
   AutomationRunSummary,
   ContentOpportunity,
   Draft,
   ExtractedWebsiteData,
   ExportJob,
+  Subscription,
   SeoAuditRun,
+  SubscriptionStatus,
+  User,
+  UserSession,
   Website,
   WebsiteAnalysisRun,
   WebsitePage
@@ -41,6 +47,13 @@ const defaultAutomationSummary: AutomationRunSummary = {
     exportJobIds: []
   },
   message: ""
+};
+
+const defaultAuthSnapshot: AuthSnapshot = {
+  isAuthenticated: false,
+  hasActiveSubscription: false,
+  user: null,
+  subscription: null
 };
 
 function normalizeDifficulty(value: unknown): ContentOpportunity["estimatedDifficulty"] {
@@ -128,6 +141,15 @@ function normalizeConfidenceLevel(value: unknown): AnalysisConfidenceLevel {
   return "low";
 }
 
+function normalizeSubscriptionStatus(value: unknown): SubscriptionStatus {
+  const normalized = String(value ?? "inactive").toLowerCase();
+  if (normalized === "trialing" || normalized === "active" || normalized === "past_due" || normalized === "canceled" || normalized === "unpaid") {
+    return normalized;
+  }
+
+  return "inactive";
+}
+
 function normalizeAutomationSummary(value: unknown): AutomationRunSummary {
   if (typeof value === "string") {
     return {
@@ -168,6 +190,7 @@ function normalizeAutomationSummary(value: unknown): AutomationRunSummary {
 export function mapWebsite(row: Row): Website {
   return {
     id: String(row.id),
+    userId: String(row.user_id ?? ""),
     name: String(row.name),
     domain: String(row.domain),
     language: String(row.language),
@@ -176,6 +199,53 @@ export function mapWebsite(row: Row): Website {
     tone: String(row.tone),
     contentGoal: String(row.content_goal),
     publishingFrequency: String(row.publishing_frequency),
+    createdAt: String(row.created_at),
+    updatedAt: String(row.updated_at)
+  };
+}
+
+export function mapUser(row: Row): User {
+  return {
+    id: String(row.id),
+    email: String(row.email),
+    name: String(row.name ?? ""),
+    passwordHash: String(row.password_hash ?? ""),
+    stripeCustomerId: String(row.stripe_customer_id ?? ""),
+    createdAt: String(row.created_at),
+    updatedAt: String(row.updated_at)
+  };
+}
+
+export function mapAuthUser(row: Row): AuthUser {
+  return {
+    id: String(row.id),
+    email: String(row.email),
+    name: String(row.name ?? ""),
+    createdAt: String(row.created_at),
+    updatedAt: String(row.updated_at)
+  };
+}
+
+export function mapUserSession(row: Row): UserSession {
+  return {
+    id: String(row.id),
+    userId: String(row.user_id),
+    token: String(row.token),
+    createdAt: String(row.created_at),
+    lastSeenAt: String(row.last_seen_at ?? row.created_at)
+  };
+}
+
+export function mapSubscription(row: Row): Subscription {
+  return {
+    id: String(row.id),
+    userId: String(row.user_id),
+    stripeCustomerId: String(row.stripe_customer_id ?? ""),
+    stripeSubscriptionId: String(row.stripe_subscription_id ?? ""),
+    stripePriceId: String(row.stripe_price_id ?? ""),
+    stripeCheckoutSessionId: String(row.stripe_checkout_session_id ?? ""),
+    status: normalizeSubscriptionStatus(row.status),
+    currentPeriodEnd: String(row.current_period_end ?? ""),
     createdAt: String(row.created_at),
     updatedAt: String(row.updated_at)
   };
@@ -301,5 +371,22 @@ export function mapExportJob(row: Row): ExportJob {
     exportPath: String(row.export_path),
     status: String(row.status) as ExportJob["status"],
     createdAt: String(row.created_at)
+  };
+}
+
+export function mapAuthSnapshot(value: unknown): AuthSnapshot {
+  if (!value || typeof value !== "object") {
+    return defaultAuthSnapshot;
+  }
+
+  const record = value as Record<string, unknown>;
+  return {
+    isAuthenticated: Boolean(record.isAuthenticated),
+    hasActiveSubscription: Boolean(record.hasActiveSubscription),
+    user: record.user && typeof record.user === "object" ? mapAuthUser(record.user as Row) : null,
+    subscription:
+      record.subscription && typeof record.subscription === "object"
+        ? mapSubscription(record.subscription as Row)
+        : null
   };
 }

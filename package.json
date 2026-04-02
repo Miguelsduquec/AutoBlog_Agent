@@ -11,9 +11,13 @@
     "build": "npm run build --workspace backend && npm run build --workspace frontend",
     "seed": "npm run seed --workspace backend",
     "start": "npm run start --workspace backend",
-    "test": "npm run test --workspace backend"
+    "test": "npm run test --workspace backend",
+    "playwright:install": "playwright install chromium",
+    "playwright:test": "npm run build && playwright test",
+    "playwright:test:headed": "npm run build && playwright test --headed"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.0",
     "concurrently": "^9.2.1"
   }
 }

@@ -10,13 +10,10 @@ export function LandingPage() {
         <div className="hero-copy">
           <span className="eyebrow">Generate blog articles automatically</span>
           <h1>Generate blog articles automatically for your website</h1>
-          <p>
-            Autoblog Agent analyzes your niche, finds relevant topics, and creates publication-ready blog
-            posts automatically.
-          </p>
+          <p>Analyze the site, find the gaps, and turn them into ready-to-review drafts.</p>
           <div className="hero-actions">
-            <Link className="button" to="/app/dashboard">
-              Launch the product
+            <Link className="button" to="/tools/content-gap-grader">
+              Try the free grader
             </Link>
             <a className="button secondary" href="#problem">
               See the workflow
@@ -24,8 +21,7 @@ export function LandingPage() {
           </div>
           <div className="hero-meta">
             <span>Website-first analysis</span>
-            <span>SEO opportunity discovery</span>
-            <span>Human review before export</span>
+            <span>Review before export</span>
           </div>
         </div>
 
@@ -40,7 +36,7 @@ export function LandingPage() {
             <div className="shot-panel wide">
               <div className="shot-label">Website analysis</div>
               <h3>Polped</h3>
-              <p>Microsoft consulting for SMB productivity and collaboration rollouts</p>
+              <p>Microsoft consulting for SMB teams</p>
               <div className="mini-pill-row">
                 <span className="mini-pill">Teams governance</span>
                 <span className="mini-pill">SharePoint</span>
@@ -50,12 +46,12 @@ export function LandingPage() {
             <div className="shot-panel">
               <div className="shot-label">Top opportunity</div>
               <h3>Month-end close automation software</h3>
-              <p>Commercial intent • High priority • Plan ready</p>
+              <p>High priority • Plan ready</p>
             </div>
             <div className="shot-panel">
               <div className="shot-label">Draft studio</div>
               <h3>Readiness score: 91</h3>
-              <p>Metadata, FAQ, internal links, and export package prepared.</p>
+              <p>Meta, FAQ, links, and export package ready.</p>
             </div>
           </div>
         </div>
@@ -65,23 +61,20 @@ export function LandingPage() {
         <div className="section-intro">
           <span className="eyebrow">Problem</span>
           <h2>Most AI writing tools skip the part that actually matters</h2>
-          <p>
-            Generic AI writers start with a blank prompt. Autoblog Agent starts with the website, the niche,
-            the existing content profile, and the SEO gaps that are holding growth back.
-          </p>
+          <p>Most tools start with a prompt. Autoblog Agent starts with the website.</p>
         </div>
         <div className="feature-grid three">
           <article className="feature-card">
             <h3>No website context</h3>
-            <p>Generic writing tools do not understand the business, service pages, or conversion paths first.</p>
+            <p>No business context first.</p>
           </article>
           <article className="feature-card">
             <h3>No operational workflow</h3>
-            <p>They rarely organize analysis, opportunity discovery, planning, drafting, and review as one system.</p>
+            <p>No clear pipeline from analysis to draft.</p>
           </article>
           <article className="feature-card">
             <h3>No repeatable publishing engine</h3>
-            <p>Teams need ongoing generation with review gates, not a one-off assistant shell.</p>
+            <p>No repeatable publishing loop.</p>
           </article>
         </div>
       </section>
@@ -93,12 +86,12 @@ export function LandingPage() {
         </div>
         <div className="steps-grid">
           {[
-            "Add a website manually and define niche, tone, market, and publishing cadence.",
-            "Crawl and analyze the website to infer content pillars, coverage, and page signals.",
-            "Run a lightweight SEO and content audit to identify structural gaps and support needs.",
-            "Discover article opportunities that match the niche and current website profile.",
-            "Convert opportunities into article plans and publication-ready drafts automatically.",
-            "Review drafts, regenerate sections if needed, and export a package for publishing."
+            "Add a website.",
+            "Analyze the core pages.",
+            "Find missed article opportunities.",
+            "Turn them into plans.",
+            "Generate review-ready drafts.",
+            "Export for publishing."
           ].map((step, index) => (
             <article className="step-card" key={step}>
               <span>{String(index + 1).padStart(2, "0")}</span>
@@ -116,19 +109,19 @@ export function LandingPage() {
         <div className="feature-grid two">
           <article className="feature-card">
             <h3>Website-first analysis</h3>
-            <p>Inspect key pages, extract metadata and headings, infer niche, and map content pillars.</p>
+            <p>Read the site before writing.</p>
           </article>
           <article className="feature-card">
             <h3>SEO opportunity engine</h3>
-            <p>Identify missing support content, topic gaps, internal linking opportunities, and priority clusters.</p>
+            <p>Find the missing topics.</p>
           </article>
           <article className="feature-card">
             <h3>Article plans and drafts</h3>
-            <p>Turn opportunities into briefs, outlines, metadata, FAQ sections, and review-ready drafts.</p>
+            <p>Go from idea to draft fast.</p>
           </article>
           <article className="feature-card">
             <h3>Automation run visibility</h3>
-            <p>Track queued, running, completed, or failed generation runs with logs and output summaries.</p>
+            <p>See what ran and what was created.</p>
           </article>
         </div>
       </section>
@@ -163,24 +156,24 @@ export function LandingPage() {
       <section className="landing-section" id="pricing">
         <div className="section-intro">
           <span className="eyebrow">Pricing</span>
-          <h2>Monetizable from v1, flexible later</h2>
-          <p>Placeholder pricing for launch. Billing and usage limits can be layered in when the product is ready.</p>
+          <h2>Simple launch pricing</h2>
+          <p>One monthly plan for the full workflow.</p>
         </div>
         <div className="pricing-card">
           <h3>Starter</h3>
           <div className="pricing-value">€99<span>/month</span></div>
-          <p>Up to 3 websites, ongoing opportunity discovery, article plans, drafts, and export packaging.</p>
-          <Link className="button" to="/app/dashboard">
-            Explore the MVP
+          <p>Websites, analysis, opportunities, plans, drafts, exports, and automation.</p>
+          <Link className="button" to="/pricing">
+            View pricing
           </Link>
         </div>
       </section>
 
       <section className="landing-cta">
         <h2>Turn website knowledge into continuous article generation</h2>
-        <p>Use Autoblog Agent to analyze, prioritize, draft, review, and export blog content in one workflow.</p>
-        <Link className="button" to="/app/dashboard">
-          Open Autoblog Agent
+        <p>Start with the free score.</p>
+        <Link className="button" to="/tools/content-gap-grader">
+          Start with the free grader
         </Link>
       </section>
     </div>

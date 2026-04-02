@@ -18,6 +18,9 @@ The current implementation is intentionally focused on a practical MVP foundatio
 - Draft generation from article plans
 - Export packaging for publication-ready article assets
 - Manual automation runs for the full multi-step article pipeline
+- Email/password authentication
+- Subscription-gated app access
+- Stripe checkout session and webhook support
 - Core docs
 
 The main focus is now the workflow from website analysis to opportunities to article plans to structured draft objects, export packages, and manually triggered automation runs.
@@ -28,6 +31,7 @@ The main focus is now the workflow from website analysis to opportunities to art
 - Node.js + Express + TypeScript backend
 - SQLite MVP data layer with seed data
 - Website analysis, SEO audit, analysis-based opportunity generation, plan generation, draft generation, automation runs, and export packaging
+- Paid-only app access with login plus subscription gating
 - Landing page plus operational SaaS application UI
 
 ## Run locally
@@ -55,6 +59,15 @@ npm run dev
 
 - Frontend: `http://localhost:5173`
 - Backend API: `http://localhost:3001/api`
+
+### Demo account
+
+If you seeded the demo database, you can log in with:
+
+- Email: `demo@autoblog-agent.local`
+- Password: `demo12345`
+
+`BILLING_MODE=mock` keeps local checkout simple. If you add Stripe keys and a price ID, checkout will use Stripe instead.
 
 ## Build
 
@@ -86,6 +99,8 @@ docs/       Product, architecture, and roadmap notes
 
 - The backend no longer seeds demo data automatically on boot. Seed explicitly with `npm run seed`.
 - If you want demo-style auto-seeding for a temporary environment, set `SEED_ON_BOOT=true`.
+- The free Content Gap Grader stays public, but the app itself now requires login plus an active subscription.
+- In local mock billing mode, checkout activates the subscription immediately so the paid flow remains testable without real Stripe keys.
 - The crawler, website analysis, opportunity generation, article planning, draft generation, automation orchestration, and export services are modular mock implementations so real AI providers or CMS integrations can replace them later without changing the product workflow.
 - Export packages are written to `backend/output`.
 - Automation runs are synchronous in this MVP and are intentionally structured so queues or background workers can be added later.

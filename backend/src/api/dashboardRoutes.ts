@@ -6,5 +6,5 @@ const dashboardService = new DashboardService();
 export const dashboardRoutes = Router();
 
 dashboardRoutes.get("/", (_request, response) => {
-  response.json(dashboardService.getSnapshot());
+  response.json(dashboardService.getSnapshot(String(response.locals.currentUser.id)));
 });

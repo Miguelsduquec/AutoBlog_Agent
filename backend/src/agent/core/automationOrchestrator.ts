@@ -113,7 +113,7 @@ export class AutomationOrchestrator {
 
   private readonly exportJobService = new ExportJobService();
 
-  async run(websiteId: string, input?: Partial<AutomationRunRequest>): Promise<OrchestratorResult> {
+  async run(userId: string, websiteId: string, input?: Partial<AutomationRunRequest>): Promise<OrchestratorResult> {
     const options = normalizeAutomationOptions(input);
     const logsJson: string[] = [];
     const outputSummary = createEmptyAutomationSummary();
@@ -129,7 +129,7 @@ export class AutomationOrchestrator {
       log(message);
     };
 
-    const website = websiteRepository.getById(websiteId);
+    const website = websiteRepository.getByIdForUser(websiteId, userId);
     if (!website) {
       throw new Error("Website not found.");
     }
@@ -176,12 +176,13 @@ export class AutomationOrchestrator {
     );
 
     let candidateOpportunities = this.opportunityService
-      .listOpportunities(websiteId)
+      .listOpportunities(userId, websiteId)
       .filter((opportunity) => !plannedOpportunityIds.has(opportunity.id) && opportunity.status !== "failed");
 
     if (candidateOpportunities.length < options.maxOpportunities) {
       try {
         const generationResult = this.opportunityService.generateFromLatestAnalysis(
+          userId,
           websiteId,
           Math.max(options.maxOpportunities * 2, 10)
         );
@@ -196,7 +197,7 @@ export class AutomationOrchestrator {
       }
 
       candidateOpportunities = this.opportunityService
-        .listOpportunities(websiteId)
+        .listOpportunities(userId, websiteId)
         .filter((opportunity) => !plannedOpportunityIds.has(opportunity.id) && opportunity.status !== "failed");
     } else {
       log(`Found ${candidateOpportunities.length} unplanned opportunities already available.`);
@@ -230,7 +231,7 @@ export class AutomationOrchestrator {
       addUnique(outputSummary.outputIds.opportunityIds, opportunity.id);
 
       try {
-        const result = this.articlePlanService.generateFromOpportunity(opportunity.id);
+        const result = this.articlePlanService.generateFromOpportunity(userId, opportunity.id);
         addUnique(outputSummary.outputIds.planIds, result.plan.id);
         addUnique(pipelinePlanIds, result.plan.id);
 
@@ -270,7 +271,7 @@ export class AutomationOrchestrator {
       }
 
       try {
-        const result = this.draftService.generateFromArticlePlan(plan.id);
+        const result = this.draftService.generateFromArticlePlan(userId, plan.id);
         addUnique(outputSummary.outputIds.draftIds, result.draft.id);
         addUnique(pipelineDraftIds, result.draft.id);
 
@@ -289,7 +290,7 @@ export class AutomationOrchestrator {
     if (options.exportDrafts) {
       for (const draftId of pipelineDraftIds) {
         try {
-          const result = this.exportJobService.createExport(draftId);
+          const result = this.exportJobService.createExport(userId, draftId);
           addUnique(outputSummary.outputIds.exportJobIds, result.exportJob.id);
 
           if (result.skipped) {

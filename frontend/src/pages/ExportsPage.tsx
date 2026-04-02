@@ -3,6 +3,7 @@ import { api } from "../api/client";
 import { EmptyState } from "../components/EmptyState";
 import { SectionCard } from "../components/SectionCard";
 import { StatusBadge } from "../components/StatusBadge";
+import { TableShell } from "../components/TableShell";
 import { useAsyncData } from "../hooks/useAsyncData";
 import { ExportJob, WorkflowStatus } from "../types";
 import { formatDate } from "../utils/format";
@@ -66,10 +67,10 @@ export function ExportsPage() {
       <div className="page-toolbar">
         <div>
           <h1>Exports</h1>
-          <p>Review packaged article bundles ready to be used outside the app.</p>
+          <p>Review export packages.</p>
         </div>
         <div className="toolbar-controls">
-          <select value={websiteFilter} onChange={(event) => setWebsiteFilter(event.target.value)}>
+          <select aria-label="Website filter" value={websiteFilter} onChange={(event) => setWebsiteFilter(event.target.value)}>
             <option value="all">All websites</option>
             {websitesQuery.data.map((website) => (
               <option key={website.id} value={website.id}>
@@ -77,7 +78,7 @@ export function ExportsPage() {
               </option>
             ))}
           </select>
-          <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as ExportStatusFilter)}>
+          <select aria-label="Status filter" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as ExportStatusFilter)}>
             <option value="all">All statuses</option>
             <option value="exported">exported</option>
             <option value="failed">failed</option>
@@ -85,11 +86,11 @@ export function ExportsPage() {
         </div>
       </div>
 
-      <SectionCard title="Export jobs" description="Structured filesystem packages created from reviewable draft objects.">
+      <SectionCard title="Export jobs" description="Saved export packages.">
         {filteredExports.length === 0 ? (
           <EmptyState title="No exports yet" description="Export a draft from the Drafts page to create the package." />
         ) : (
-          <table className="data-table">
+          <TableShell label="Export jobs">
             <thead>
               <tr>
                 <th>Website</th>
@@ -122,13 +123,13 @@ export function ExportsPage() {
                 );
               })}
             </tbody>
-          </table>
+          </TableShell>
         )}
       </SectionCard>
 
       <SectionCard
         title="Export detail"
-        description="Inspect the filesystem package, related content objects, and file bundle before handing it off to another workflow."
+        description="Files and linked content."
       >
         {detailLoading ? (
           <div className="state-card">Loading export detail…</div>
@@ -168,7 +169,7 @@ export function ExportsPage() {
             </article>
           </div>
         ) : (
-          <EmptyState title="No export selected" description="Choose an export job from the table to inspect the generated package." />
+          <EmptyState title="No export selected" description="Choose an export to inspect." />
         )}
       </SectionCard>
     </div>

@@ -31,12 +31,12 @@ function normalizeWebsiteInput(input: WebsiteInput): WebsiteInput {
 }
 
 export class WebsiteService {
-  listWebsites(): Website[] {
-    return websiteRepository.list();
+  listWebsites(userId: string): Website[] {
+    return websiteRepository.list(userId);
   }
 
-  getWebsiteDetail(id: string): WebsiteDetail | null {
-    const website = websiteRepository.getById(id);
+  getWebsiteDetail(userId: string, id: string): WebsiteDetail | null {
+    const website = websiteRepository.getByIdForUser(id, userId);
     if (!website) {
       return null;
     }
@@ -51,11 +51,12 @@ export class WebsiteService {
     };
   }
 
-  createWebsite(input: WebsiteInput): Website {
+  createWebsite(userId: string, input: WebsiteInput): Website {
     const now = new Date().toISOString();
     const normalizedInput = normalizeWebsiteInput(input);
     const website: Website = {
       id: createId("site"),
+      userId,
       ...normalizedInput,
       createdAt: now,
       updatedAt: now
@@ -64,8 +65,8 @@ export class WebsiteService {
     return websiteRepository.create(website);
   }
 
-  updateWebsite(id: string, input: WebsiteInput): Website | null {
-    const existing = websiteRepository.getById(id);
+  updateWebsite(userId: string, id: string, input: WebsiteInput): Website | null {
+    const existing = websiteRepository.getByIdForUser(id, userId);
     if (!existing) {
       return null;
     }
@@ -81,7 +82,21 @@ export class WebsiteService {
     return websiteRepository.update(updated);
   }
 
-  deleteWebsite(id: string): void {
+  deleteWebsite(userId: string, id: string): void {
+    const website = websiteRepository.getByIdForUser(id, userId);
+    if (!website) {
+      throw new HttpError(404, "Website not found.");
+    }
+
     websiteRepository.delete(id);
+  }
+
+  requireOwnedWebsite(userId: string, websiteId: string): Website {
+    const website = websiteRepository.getByIdForUser(websiteId, userId);
+    if (!website) {
+      throw new HttpError(404, "Website not found.");
+    }
+
+    return website;
   }
 }

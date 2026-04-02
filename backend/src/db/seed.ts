@@ -12,6 +12,9 @@ function resetDatabase(): void {
     DELETE FROM website_analysis_runs;
     DELETE FROM website_pages;
     DELETE FROM websites;
+    DELETE FROM user_sessions;
+    DELETE FROM subscriptions;
+    DELETE FROM users;
   `);
 }
 
@@ -22,15 +25,55 @@ export function seedDatabase(reset = false): void {
 
   const seed = getSeedData();
 
+  const insertUser = db.prepare(`
+    INSERT OR IGNORE INTO users (
+      id, email, name, password_hash, stripe_customer_id, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  for (const user of seed.users) {
+    insertUser.run(
+      user.id,
+      user.email,
+      user.name,
+      user.passwordHash,
+      user.stripeCustomerId,
+      user.createdAt,
+      user.updatedAt
+    );
+  }
+
+  const insertSubscription = db.prepare(`
+    INSERT OR IGNORE INTO subscriptions (
+      id, user_id, stripe_customer_id, stripe_subscription_id, stripe_price_id, stripe_checkout_session_id, status, current_period_end, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  for (const subscription of seed.subscriptions) {
+    insertSubscription.run(
+      subscription.id,
+      subscription.userId,
+      subscription.stripeCustomerId,
+      subscription.stripeSubscriptionId,
+      subscription.stripePriceId,
+      subscription.stripeCheckoutSessionId,
+      subscription.status,
+      subscription.currentPeriodEnd,
+      subscription.createdAt,
+      subscription.updatedAt
+    );
+  }
+
   const insertWebsite = db.prepare(`
     INSERT OR IGNORE INTO websites (
-      id, name, domain, language, target_country, niche, tone, content_goal, publishing_frequency, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      id, user_id, name, domain, language, target_country, niche, tone, content_goal, publishing_frequency, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   for (const website of seed.websites) {
     insertWebsite.run(
       website.id,
+      website.userId,
       website.name,
       website.domain,
       website.language,

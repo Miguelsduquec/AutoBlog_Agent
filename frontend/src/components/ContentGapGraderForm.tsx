@@ -23,10 +23,11 @@ export function ContentGapGraderForm({
   }
 
   return (
-    <form className={`grader-form ${compact ? "compact" : ""}`} onSubmit={handleSubmit}>
+    <form className={`grader-form ${compact ? "compact" : ""}`} data-testid="content-gap-grader-form" onSubmit={handleSubmit}>
       <label className="grader-input-wrap">
         <span className="eyebrow">Website URL</span>
         <input
+          data-testid="content-gap-grader-url"
           type="url"
           placeholder="https://yourwebsite.com"
           value={value}
@@ -34,7 +35,7 @@ export function ContentGapGraderForm({
           required
         />
       </label>
-      <button className="button" type="submit" disabled={submitting || !value.trim()}>
+      <button className="button" data-testid="content-gap-grader-submit" type="submit" disabled={submitting || !value.trim()}>
         {submitting ? "Analyzing…" : ctaLabel}
       </button>
     </form>

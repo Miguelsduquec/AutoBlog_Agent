@@ -17,7 +17,7 @@ export function SectionCard({ title, description, actions, children }: SectionCa
         </div>
         {actions ? <div className="section-actions">{actions}</div> : null}
       </div>
-      <div>{children}</div>
+      <div className="section-content">{children}</div>
     </section>
   );
 }

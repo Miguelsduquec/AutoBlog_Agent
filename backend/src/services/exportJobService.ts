@@ -4,17 +4,24 @@ import { exportJobRepository } from "../repositories/operationsRepository";
 import { websiteRepository } from "../repositories/websiteRepository";
 import { ExportGenerationResult, ExportJob, ExportJobDetail } from "../types";
 import { createId } from "../utils/ids";
+import { HttpError } from "../utils/errors";
 
 export class ExportJobService {
   private readonly exportService = new ExportService();
 
-  listExports(websiteId?: string): ExportJob[] {
-    return exportJobRepository.list(websiteId);
+  listExports(userId: string, websiteId?: string): ExportJob[] {
+    if (websiteId) {
+      this.requireOwnedWebsite(userId, websiteId);
+      return exportJobRepository.list(websiteId);
+    }
+
+    const websiteIds = new Set(websiteRepository.list(userId).map((website) => website.id));
+    return exportJobRepository.list().filter((job) => websiteIds.has(job.websiteId));
   }
 
-  getExport(id: string): ExportJobDetail | null {
+  getExport(userId: string, id: string): ExportJobDetail | null {
     const exportJob = exportJobRepository.getById(id);
-    if (!exportJob) {
+    if (!exportJob || !websiteRepository.getByIdForUser(exportJob.websiteId, userId)) {
       return null;
     }
 
@@ -31,11 +38,13 @@ export class ExportJobService {
     };
   }
 
-  createExport(draftId: string, reexport = false): ExportGenerationResult {
+  createExport(userId: string, draftId: string, reexport = false): ExportGenerationResult {
     const draft = draftRepository.getById(draftId);
     if (!draft) {
       throw new Error("Draft not found.");
     }
+
+    this.requireOwnedWebsite(userId, draft.websiteId);
 
     const articlePlan = articlePlanRepository.getById(draft.articlePlanId);
     const website = websiteRepository.getById(draft.websiteId);
@@ -98,5 +107,14 @@ export class ExportJobService {
       regenerated: false,
       summaryMessage: `Created an export package for "${articlePlan.title}".`
     };
+  }
+
+  private requireOwnedWebsite(userId: string, websiteId: string) {
+    const website = websiteRepository.getByIdForUser(websiteId, userId);
+    if (!website) {
+      throw new HttpError(404, "Website not found.");
+    }
+
+    return website;
   }
 }

@@ -3,6 +3,7 @@ import { EmptyState } from "../components/EmptyState";
 import { MetricCard } from "../components/MetricCard";
 import { SectionCard } from "../components/SectionCard";
 import { StatusBadge } from "../components/StatusBadge";
+import { TableShell } from "../components/TableShell";
 import { api } from "../api/client";
 import { useAsyncData } from "../hooks/useAsyncData";
 import { formatDate } from "../utils/format";
@@ -26,8 +27,8 @@ export function DashboardPage() {
     <div className="page-stack">
       <div className="page-toolbar">
         <div>
-          <h1>Autoblog operations overview</h1>
-          <p>Track the core Phase 1 workflow: websites, analysis coverage, and discovered opportunities.</p>
+          <h1>Dashboard</h1>
+          <p>See what needs attention.</p>
         </div>
         <Link className="button" to="/app/websites">
           Add website
@@ -35,30 +36,30 @@ export function DashboardPage() {
       </div>
 
       <div className="metrics-grid four-up">
-        <MetricCard title="Websites" value={dashboardQuery.data.totals.websites} help="Tracked domains in the workspace" />
+        <MetricCard title="Websites" value={dashboardQuery.data.totals.websites} help="Sites in this workspace" />
         <MetricCard
           title="Analysis Runs"
           value={dashboardQuery.data.totals.analysisRuns}
-          help="Website analyses stored in the system"
+          help="Completed analysis runs"
         />
         <MetricCard
           title="Analyzed Pages"
           value={dashboardQuery.data.totals.analyzedPages}
-          help="Extracted page records stored for website analysis"
+          help="Pages used for context"
         />
         <MetricCard
           title="Opportunities"
           value={dashboardQuery.data.totals.opportunities}
-          help="Current topic opportunities ready for prioritization"
+          help="Topics ready to review"
         />
       </div>
 
       <div className="grid-two">
-        <SectionCard title="Recent analysis runs" description="Latest website analysis activity and inferred coverage.">
+        <SectionCard title="Recent analysis" description="Latest runs.">
           {dashboardQuery.data.recentAnalysisRuns.length === 0 ? (
             <EmptyState title="No analysis runs yet" description="Analyze a website to populate this view." />
           ) : (
-            <table className="data-table">
+            <TableShell label="Recent analysis runs">
               <thead>
                 <tr>
                   <th>Website</th>
@@ -79,15 +80,15 @@ export function DashboardPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </TableShell>
           )}
         </SectionCard>
 
-        <SectionCard title="Website portfolio snapshot" description="Recent websites in the workspace and their latest context.">
+        <SectionCard title="Websites" description="Recent sites.">
           {websitesQuery.data.length === 0 ? (
             <EmptyState title="No websites yet" description="Add your first website to start the Phase 1 workflow." />
           ) : (
-            <table className="data-table">
+            <TableShell label="Website portfolio snapshot">
               <thead>
                 <tr>
                   <th>Website</th>
@@ -108,16 +109,16 @@ export function DashboardPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </TableShell>
           )}
         </SectionCard>
       </div>
 
-      <SectionCard title="Top opportunities snapshot" description="High-priority topics surfaced during Phase 1 discovery.">
+      <SectionCard title="Top opportunities" description="Best topics to act on next.">
         {dashboardQuery.data.topOpportunities.length === 0 ? (
           <EmptyState title="No opportunities yet" description="Run opportunity discovery on a website to populate this list." />
         ) : (
-          <table className="data-table">
+          <TableShell label="Top opportunities snapshot">
             <thead>
               <tr>
                 <th>Keyword</th>
@@ -142,7 +143,7 @@ export function DashboardPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </TableShell>
         )}
       </SectionCard>
     </div>

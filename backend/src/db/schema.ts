@@ -1,7 +1,44 @@
 export const schemaStatements = [
   `
+    CREATE TABLE IF NOT EXISTS users (
+      id TEXT PRIMARY KEY,
+      email TEXT NOT NULL UNIQUE,
+      name TEXT NOT NULL DEFAULT '',
+      password_hash TEXT NOT NULL,
+      stripe_customer_id TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )
+  `,
+  `
+    CREATE TABLE IF NOT EXISTS user_sessions (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      token TEXT NOT NULL UNIQUE,
+      created_at TEXT NOT NULL,
+      last_seen_at TEXT NOT NULL,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `,
+  `
+    CREATE TABLE IF NOT EXISTS subscriptions (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL UNIQUE,
+      stripe_customer_id TEXT NOT NULL DEFAULT '',
+      stripe_subscription_id TEXT NOT NULL DEFAULT '',
+      stripe_price_id TEXT NOT NULL DEFAULT '',
+      stripe_checkout_session_id TEXT NOT NULL DEFAULT '',
+      status TEXT NOT NULL DEFAULT 'inactive',
+      current_period_end TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `,
+  `
     CREATE TABLE IF NOT EXISTS websites (
       id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL DEFAULT '',
       name TEXT NOT NULL,
       domain TEXT NOT NULL UNIQUE,
       language TEXT NOT NULL,
@@ -11,7 +48,8 @@ export const schemaStatements = [
       content_goal TEXT NOT NULL,
       publishing_frequency TEXT NOT NULL,
       created_at TEXT NOT NULL,
-      updated_at TEXT NOT NULL
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )
   `,
   `

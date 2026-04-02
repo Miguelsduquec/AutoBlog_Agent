@@ -1,5 +1,6 @@
 import { CSSProperties, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useAccess } from "../access/AccessContext";
 import { api } from "../api/client";
 import { ContentGapGraderForm } from "../components/ContentGapGraderForm";
 import { GlobalHeader } from "../components/GlobalHeader";
@@ -26,6 +27,7 @@ function scoreLabel(score: number): string {
 
 export function ContentGapGraderResultsPage() {
   const navigate = useNavigate();
+  const { auth } = useAccess();
   const [searchParams] = useSearchParams();
   const requestedUrl = searchParams.get("url") ?? "";
   const [urlInput, setUrlInput] = useState(requestedUrl);
@@ -87,6 +89,7 @@ export function ContentGapGraderResultsPage() {
 
   const shareUrl = useMemo(() => shareUrlFor(report?.websiteUrl ?? requestedUrl), [report?.websiteUrl, requestedUrl]);
   const scoreStyle = report ? ({ "--score": report.scores.overallScore } as CSSProperties) : undefined;
+  const pricingHref = `/pricing${report?.websiteUrl ? `?websiteUrl=${encodeURIComponent(report.websiteUrl)}` : ""}`;
 
   function handleSubmit() {
     const trimmed = urlInput.trim();
@@ -130,7 +133,7 @@ export function ContentGapGraderResultsPage() {
           <div>
             <span className="eyebrow">Free report</span>
             <h1>Content Gap Grader results</h1>
-            <p>Analyze a website, share the score, and turn the gap list into an Autoblog Agent workflow.</p>
+            <p>See the score, share it, and decide what to fix next.</p>
           </div>
 
           <ContentGapGraderForm
@@ -180,7 +183,7 @@ export function ContentGapGraderResultsPage() {
                   <span>{report.scores.gradeLabel} grade</span>
                 </div>
 
-                <div className="grader-score-summary">
+              <div className="grader-score-summary">
                   <span className="eyebrow">{report.websiteName}</span>
                   <h2>{scoreLabel(report.scores.overallScore)} content foundation</h2>
                   <p>{report.overview}</p>
@@ -196,14 +199,18 @@ export function ContentGapGraderResultsPage() {
               </div>
 
               <div className="grader-report-actions">
-                <button className="button" onClick={() => void handleShare()}>
+                <button className="button" data-testid="grader-share-button" onClick={() => void handleShare()}>
                   Share score
                 </button>
-                <button className="button secondary" onClick={() => void handleCopyLink()}>
+                <button className="button secondary" data-testid="grader-copy-link-button" onClick={() => void handleCopyLink()}>
                   Copy link
                 </button>
-                <Link className="button secondary" to="/app/dashboard">
-                  Upgrade to Autoblog Agent
+                <Link
+                  className="button secondary"
+                  data-testid="grader-upgrade-cta"
+                  to={auth.isAuthenticated && auth.hasActiveSubscription ? "/app/dashboard" : pricingHref}
+                >
+                  {auth.isAuthenticated && auth.hasActiveSubscription ? "Open Autoblog Agent" : "See pricing"}
                 </Link>
                 {shareFeedback ? <span className="muted-copy">{shareFeedback}</span> : null}
               </div>
@@ -253,7 +260,7 @@ export function ContentGapGraderResultsPage() {
                 <div className="section-header">
                   <div>
                     <span className="eyebrow">What we saw</span>
-                    <h2>Website readout</h2>
+                    <h2>Website snapshot</h2>
                   </div>
                 </div>
                 <p className="detail-summary">{report.nicheSummary}</p>
@@ -281,7 +288,7 @@ export function ContentGapGraderResultsPage() {
                 <div className="section-header">
                   <div>
                     <span className="eyebrow">Top 5 missing opportunities</span>
-                    <h2>Where coverage is most obviously missing</h2>
+                    <h2>Biggest gaps</h2>
                   </div>
                 </div>
                 <div className="stack-list">
@@ -310,7 +317,7 @@ export function ContentGapGraderResultsPage() {
               <div className="section-header">
                 <div>
                   <span className="eyebrow">Top 3 quick wins</span>
-                  <h2>Article ideas you could act on first</h2>
+                  <h2>Quick wins</h2>
                 </div>
               </div>
 
@@ -335,11 +342,11 @@ export function ContentGapGraderResultsPage() {
               <div>
                 <span className="eyebrow">Autoblog Agent</span>
                 <h2>Want to fix these gaps automatically?</h2>
-                <p>Generate article plans and drafts with Autoblog Agent instead of managing the content workflow by hand.</p>
+                <p>Generate plans and drafts with Autoblog Agent.</p>
               </div>
               <div className="hero-actions">
-                <Link className="button" to="/app/dashboard">
-                  Generate plans and drafts
+                <Link className="button" to={auth.isAuthenticated && auth.hasActiveSubscription ? "/app/dashboard" : pricingHref}>
+                  {auth.isAuthenticated && auth.hasActiveSubscription ? "Open app" : "See pricing"}
                 </Link>
                 <Link className="button secondary" to="/tools/content-gap-grader">
                   Run another website

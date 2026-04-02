@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { generateOpportunityCandidates } from "../../src/content/opportunityGenerationCore";
+import { DEMO_USER_ID } from "../../src/db/seedData";
 import { analysisRepository } from "../../src/repositories/analysisRepository";
 import { articlePlanRepository, draftRepository, opportunityRepository } from "../../src/repositories/contentRepository";
 import { websiteRepository } from "../../src/repositories/websiteRepository";
@@ -54,6 +55,7 @@ describe("Content pipeline services", () => {
   it("enriches weak medium-confidence bookkeeping phrases into more specific queries", () => {
     const website: Website = {
       id: "site-test-bookkeeping",
+      userId: DEMO_USER_ID,
       name: "Northstar Bookkeeping",
       domain: "https://northstar-bookkeeping.example",
       language: "English",
@@ -112,6 +114,7 @@ describe("Content pipeline services", () => {
   it("creates varied editorial titles for simple-site opportunities", () => {
     const website: Website = {
       id: "site-editorial-simple",
+      userId: DEMO_USER_ID,
       name: "Northstar Bookkeeping",
       domain: "https://northstar-bookkeeping.example",
       language: "English",
@@ -186,9 +189,8 @@ describe("Content pipeline services", () => {
 
   it("creates a plan once per opportunity unless explicitly regenerated", () => {
     const service = new ArticlePlanService();
-
-    const firstRun = service.generateFromOpportunity("opp-finnova-2");
-    const secondRun = service.generateFromOpportunity("opp-finnova-2");
+    const firstRun = service.generateFromOpportunity(DEMO_USER_ID, "opp-finnova-2");
+    const secondRun = service.generateFromOpportunity(DEMO_USER_ID, "opp-finnova-2");
     const persistedPlan = articlePlanRepository.findByOpportunityId("opp-finnova-2");
 
     expect(firstRun.skipped).toBe(false);
@@ -203,9 +205,8 @@ describe("Content pipeline services", () => {
 
   it("generates structured drafts once per plan unless explicitly regenerated", () => {
     const service = new DraftService();
-
-    const firstRun = service.generateFromArticlePlan("plan-greenforge-1");
-    const secondRun = service.generateFromArticlePlan("plan-greenforge-1");
+    const firstRun = service.generateFromArticlePlan(DEMO_USER_ID, "plan-greenforge-1");
+    const secondRun = service.generateFromArticlePlan(DEMO_USER_ID, "plan-greenforge-1");
     const persistedDraft = draftRepository.findByArticlePlanId("plan-greenforge-1");
 
     expect(firstRun.skipped).toBe(false);

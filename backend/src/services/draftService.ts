@@ -3,28 +3,37 @@ import { analysisRepository } from "../repositories/analysisRepository";
 import { articlePlanRepository, draftRepository } from "../repositories/contentRepository";
 import { websitePageRepository, websiteRepository } from "../repositories/websiteRepository";
 import { Draft, DraftGenerationResult } from "../types";
+import { HttpError } from "../utils/errors";
 
 export class DraftService {
   private readonly generator = new DraftGeneratorService();
 
-  listDrafts(websiteId?: string): Draft[] {
-    return draftRepository.list(websiteId);
+  listDrafts(userId: string, websiteId?: string): Draft[] {
+    if (websiteId) {
+      this.requireOwnedWebsite(userId, websiteId);
+      return draftRepository.list(websiteId);
+    }
+
+    const websiteIds = new Set(websiteRepository.list(userId).map((website) => website.id));
+    return draftRepository.list().filter((draft) => websiteIds.has(draft.websiteId));
   }
 
-  getDraft(id: string): Draft | null {
-    return draftRepository.getById(id);
+  getDraft(userId: string, id: string): Draft | null {
+    const draft = draftRepository.getById(id);
+    if (!draft || !websiteRepository.getByIdForUser(draft.websiteId, userId)) {
+      return null;
+    }
+
+    return draft;
   }
 
-  generateFromArticlePlan(planId: string, regenerate = false): DraftGenerationResult {
+  generateFromArticlePlan(userId: string, planId: string, regenerate = false): DraftGenerationResult {
     const plan = articlePlanRepository.getById(planId);
     if (!plan) {
       throw new Error("Article plan not found.");
     }
 
-    const website = websiteRepository.getById(plan.websiteId);
-    if (!website) {
-      throw new Error("Website not found.");
-    }
+    const website = this.requireOwnedWebsite(userId, plan.websiteId);
 
     const latestAnalysis = analysisRepository.getLatestByWebsiteId(plan.websiteId);
     const pages = websitePageRepository.listByWebsiteId(plan.websiteId);
@@ -70,7 +79,8 @@ export class DraftService {
       summaryMessage: `Created a new draft for "${plan.title}".`
     };
   }
-  generateDraftsForWebsite(websiteId: string, limit = 3): Draft[] {
+  generateDraftsForWebsite(userId: string, websiteId: string, limit = 3): Draft[] {
+    this.requireOwnedWebsite(userId, websiteId);
     const existingDraftPlanIds = new Set(
       draftRepository
         .list(websiteId)
@@ -82,17 +92,25 @@ export class DraftService {
       .filter((plan) => plan.status === "planned" && !existingDraftPlanIds.has(plan.id))
       .slice(0, limit);
 
-    return plans
-      .map((plan) => this.generateFromArticlePlan(plan.id))
-      .filter((result) => !result.skipped)
-      .map((result) => result.draft);
+    const drafts: Draft[] = [];
+
+    for (const plan of plans) {
+      const result = this.generateFromArticlePlan(userId, plan.id);
+      if (!result.skipped) {
+        drafts.push(result.draft);
+      }
+    }
+
+    return drafts;
   }
 
-  regenerateSection(draftId: string, section: "outline" | "body" | "meta" | "faq"): Draft {
+  regenerateSection(userId: string, draftId: string, section: "outline" | "body" | "meta" | "faq"): Draft {
     const draft = draftRepository.getById(draftId);
     if (!draft) {
       throw new Error("Draft not found.");
     }
+
+    this.requireOwnedWebsite(userId, draft.websiteId);
 
     if (section === "outline") {
       draft.outlineJson = [...draft.outlineJson, "New angle to support search intent"];
@@ -122,14 +140,25 @@ export class DraftService {
     return draftRepository.update(draft);
   }
 
-  markReviewReady(draftId: string): Draft {
+  markReviewReady(userId: string, draftId: string): Draft {
     const draft = draftRepository.getById(draftId);
     if (!draft) {
       throw new Error("Draft not found.");
     }
 
+    this.requireOwnedWebsite(userId, draft.websiteId);
+
     draft.status = "ready";
     draft.readinessScore = Math.max(draft.readinessScore, 90);
     return draftRepository.update(draft);
+  }
+
+  private requireOwnedWebsite(userId: string, websiteId: string) {
+    const website = websiteRepository.getByIdForUser(websiteId, userId);
+    if (!website) {
+      throw new HttpError(404, "Website not found.");
+    }
+
+    return website;
   }
 }

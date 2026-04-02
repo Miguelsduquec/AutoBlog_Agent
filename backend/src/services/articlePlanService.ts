@@ -3,23 +3,32 @@ import { analysisRepository } from "../repositories/analysisRepository";
 import { articlePlanRepository, opportunityRepository } from "../repositories/contentRepository";
 import { websiteRepository } from "../repositories/websiteRepository";
 import { ArticlePlan, PlanGenerationResult } from "../types";
+import { HttpError } from "../utils/errors";
 
 export class ArticlePlanService {
   private readonly planner = new ArticlePlannerService();
 
-  listPlans(websiteId?: string): ArticlePlan[] {
-    return articlePlanRepository.list(websiteId);
-  }
-
-  getPlan(id: string): ArticlePlan | null {
-    return articlePlanRepository.getById(id);
-  }
-
-  generateForWebsite(websiteId: string, limit = 5): ArticlePlan[] {
-    const website = websiteRepository.getById(websiteId);
-    if (!website) {
-      throw new Error("Website not found.");
+  listPlans(userId: string, websiteId?: string): ArticlePlan[] {
+    if (websiteId) {
+      this.requireOwnedWebsite(userId, websiteId);
+      return articlePlanRepository.list(websiteId);
     }
+
+    const websiteIds = new Set(websiteRepository.list(userId).map((website) => website.id));
+    return articlePlanRepository.list().filter((plan) => websiteIds.has(plan.websiteId));
+  }
+
+  getPlan(userId: string, id: string): ArticlePlan | null {
+    const plan = articlePlanRepository.getById(id);
+    if (!plan || !websiteRepository.getByIdForUser(plan.websiteId, userId)) {
+      return null;
+    }
+
+    return plan;
+  }
+
+  generateForWebsite(userId: string, websiteId: string, limit = 5): ArticlePlan[] {
+    this.requireOwnedWebsite(userId, websiteId);
 
     const plannedOpportunityIds = new Set(
       articlePlanRepository
@@ -33,22 +42,25 @@ export class ArticlePlanService {
       .filter((opportunity) => opportunity.status === "new" && !plannedOpportunityIds.has(opportunity.id))
       .slice(0, limit);
 
-    return candidates
-      .map((opportunity) => this.generateFromOpportunity(opportunity.id))
-      .filter((result) => !result.skipped)
-      .map((result) => result.plan);
+    const plans: ArticlePlan[] = [];
+
+    for (const opportunity of candidates) {
+      const result = this.generateFromOpportunity(userId, opportunity.id);
+      if (!result.skipped) {
+        plans.push(result.plan);
+      }
+    }
+
+    return plans;
   }
 
-  generateFromOpportunity(opportunityId: string, regenerate = false): PlanGenerationResult {
+  generateFromOpportunity(userId: string, opportunityId: string, regenerate = false): PlanGenerationResult {
     const opportunity = opportunityRepository.getById(opportunityId);
     if (!opportunity) {
       throw new Error("Opportunity not found.");
     }
 
-    const website = websiteRepository.getById(opportunity.websiteId);
-    if (!website) {
-      throw new Error("Website not found.");
-    }
+    const website = this.requireOwnedWebsite(userId, opportunity.websiteId);
 
     const latestAnalysis = analysisRepository.getLatestByWebsiteId(opportunity.websiteId);
     const existingPlan = articlePlanRepository.findByOpportunityId(opportunity.id);
@@ -92,5 +104,14 @@ export class ArticlePlanService {
       regenerated: false,
       summaryMessage: `Created a new article plan for "${opportunity.keyword}".`
     };
+  }
+
+  private requireOwnedWebsite(userId: string, websiteId: string) {
+    const website = websiteRepository.getByIdForUser(websiteId, userId);
+    if (!website) {
+      throw new HttpError(404, "Website not found.");
+    }
+
+    return website;
   }
 }

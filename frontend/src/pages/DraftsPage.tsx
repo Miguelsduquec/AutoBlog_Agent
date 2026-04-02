@@ -1,8 +1,10 @@
 import { useMemo, useState } from "react";
+import { useAccessGateRedirect } from "../access/useAccessGateRedirect";
 import { api } from "../api/client";
 import { EmptyState } from "../components/EmptyState";
 import { SectionCard } from "../components/SectionCard";
 import { StatusBadge } from "../components/StatusBadge";
+import { TableShell } from "../components/TableShell";
 import { useAsyncData } from "../hooks/useAsyncData";
 import { Draft, WorkflowStatus } from "../types";
 import { formatDate } from "../utils/format";
@@ -10,6 +12,7 @@ import { formatDate } from "../utils/format";
 type DraftStatusFilter = WorkflowStatus | "all";
 
 export function DraftsPage() {
+  const handleAccessError = useAccessGateRedirect();
   const websitesQuery = useAsyncData(api.getWebsites, []);
   const plansQuery = useAsyncData(() => api.getPlans(), []);
   const draftsQuery = useAsyncData(() => api.getDrafts(), []);
@@ -78,11 +81,19 @@ export function DraftsPage() {
       return;
     }
 
-    const drafts = await api.generateDraftBatch(websiteFilter, 3);
-    setGenerationMessage(
-      drafts.length > 0 ? `Generated ${drafts.length} drafts for the selected website.` : "No new drafts were created."
-    );
-    await draftsQuery.refresh();
+    try {
+      const drafts = await api.generateDraftBatch(websiteFilter, 3);
+      setGenerationMessage(
+        drafts.length > 0 ? `Generated ${drafts.length} drafts for the selected website.` : "No new drafts were created."
+      );
+      await draftsQuery.refresh();
+    } catch (error) {
+      if (handleAccessError(error)) {
+        return;
+      }
+
+      setGenerationMessage(error instanceof Error ? error.message : "Unable to generate drafts.");
+    }
   }
 
   return (
@@ -90,10 +101,10 @@ export function DraftsPage() {
       <div className="page-toolbar">
         <div>
           <h1>Drafts</h1>
-          <p>Inspect structured article drafts, review metadata, and prepare content for human review.</p>
+          <p>Review drafts before export.</p>
         </div>
         <div className="toolbar-controls">
-          <select value={websiteFilter} onChange={(event) => setWebsiteFilter(event.target.value)}>
+          <select aria-label="Website filter" value={websiteFilter} onChange={(event) => setWebsiteFilter(event.target.value)}>
             <option value="all">All websites</option>
             {websitesQuery.data.map((website) => (
               <option key={website.id} value={website.id}>
@@ -101,7 +112,7 @@ export function DraftsPage() {
               </option>
             ))}
           </select>
-          <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as DraftStatusFilter)}>
+          <select aria-label="Status filter" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as DraftStatusFilter)}>
             <option value="all">All statuses</option>
             <option value="drafting">drafting</option>
             <option value="review">review</option>
@@ -110,6 +121,7 @@ export function DraftsPage() {
           </select>
           <div className="range-inputs">
             <input
+              aria-label="Minimum readiness"
               type="number"
               min={0}
               max={100}
@@ -117,6 +129,7 @@ export function DraftsPage() {
               onChange={(event) => setMinReadiness(Number(event.target.value))}
             />
             <input
+              aria-label="Maximum readiness"
               type="number"
               min={0}
               max={100}
@@ -133,11 +146,11 @@ export function DraftsPage() {
       {generationMessage ? <div className="state-card">{generationMessage}</div> : null}
       {exportMessage ? <div className="state-card">{exportMessage}</div> : null}
 
-      <SectionCard title="Draft queue" description="Publication-oriented drafts created from structured article plans.">
+      <SectionCard title="Draft queue" description="Saved drafts for this workspace.">
         {filteredDrafts.length === 0 ? (
           <EmptyState title="No drafts yet" description="Generate a draft from an article plan or batch-generate drafts for a website." />
         ) : (
-          <table className="data-table">
+          <TableShell label="Draft queue">
             <thead>
               <tr>
                 <th>Title</th>
@@ -175,6 +188,13 @@ export function DraftsPage() {
                             try {
                               const result = await api.createExport(draft.id);
                               setExportMessage(result.summaryMessage);
+                              await draftsQuery.refresh();
+                            } catch (error) {
+                              if (handleAccessError(error)) {
+                                return;
+                              }
+
+                              setExportMessage(error instanceof Error ? error.message : "Unable to export the draft.");
                             } finally {
                               setExportingDraftId("");
                             }
@@ -188,13 +208,13 @@ export function DraftsPage() {
                 );
               })}
             </tbody>
-          </table>
+          </TableShell>
         )}
       </SectionCard>
 
       <SectionCard
         title="Draft detail"
-        description="Review structure, metadata, HTML preview, FAQ, and internal links before marking a draft ready."
+        description="Review the article package."
         actions={
           selectedDraft ? (
             <div className="toolbar-controls">
@@ -287,7 +307,7 @@ export function DraftsPage() {
             </div>
           </div>
         ) : (
-          <EmptyState title="No draft selected" description="Choose a draft from the table to inspect its content package and SEO metadata." />
+          <EmptyState title="No draft selected" description="Choose a draft to review." />
         )}
       </SectionCard>
     </div>

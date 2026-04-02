@@ -3,6 +3,7 @@ import { api } from "../api/client";
 import { EmptyState } from "../components/EmptyState";
 import { SectionCard } from "../components/SectionCard";
 import { StatusBadge } from "../components/StatusBadge";
+import { TableShell } from "../components/TableShell";
 import { useAsyncData } from "../hooks/useAsyncData";
 import { AutomationRun, AutomationRunType, AutomationStatus } from "../types";
 import { formatDate } from "../utils/format";
@@ -135,10 +136,10 @@ export function AutomationRunsPage() {
       <div className="page-toolbar">
         <div>
           <h1>Automation runs</h1>
-          <p>Track multi-step generation workflows, execution logs, and the outputs produced for each website.</p>
+          <p>Track automated runs and what they created.</p>
         </div>
         <div className="toolbar-controls">
-          <select value={websiteFilter} onChange={(event) => setWebsiteFilter(event.target.value)}>
+          <select aria-label="Website filter" value={websiteFilter} onChange={(event) => setWebsiteFilter(event.target.value)}>
             <option value="all">All websites</option>
             {websites.map((website) => (
               <option key={website.id} value={website.id}>
@@ -146,7 +147,7 @@ export function AutomationRunsPage() {
               </option>
             ))}
           </select>
-          <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as RunStatusFilter)}>
+          <select aria-label="Status filter" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as RunStatusFilter)}>
             <option value="all">All statuses</option>
             <option value="queued">queued</option>
             <option value="running">running</option>
@@ -154,7 +155,7 @@ export function AutomationRunsPage() {
             <option value="partial">partial</option>
             <option value="failed">failed</option>
           </select>
-          <select value={runTypeFilter} onChange={(event) => setRunTypeFilter(event.target.value as RunTypeFilter)}>
+          <select aria-label="Run type filter" value={runTypeFilter} onChange={(event) => setRunTypeFilter(event.target.value as RunTypeFilter)}>
             <option value="all">All run types</option>
             <option value="analyze-only">analyze-only</option>
             <option value="opportunities-only">opportunities-only</option>
@@ -163,14 +164,14 @@ export function AutomationRunsPage() {
         </div>
       </div>
 
-      <SectionCard title="Run history" description="Each run records workflow status, logs, summary counts, and linked outputs.">
+      <SectionCard title="Run history" description="Recent runs and outcomes.">
         {filteredRuns.length === 0 ? (
           <EmptyState
             title="No automation runs yet"
-            description="Trigger a run from a website detail page to execute the full pipeline in one action."
+            description="Start a run from a website page."
           />
         ) : (
-          <table className="data-table">
+          <TableShell label="Automation runs">
             <thead>
               <tr>
                 <th>Website</th>
@@ -201,13 +202,13 @@ export function AutomationRunsPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </TableShell>
         )}
       </SectionCard>
 
       <SectionCard
         title="Run detail"
-        description="Inspect step-by-step logs, output counts, and the content objects touched by a selected automation run."
+        description="Logs, counts, and linked items."
       >
         {detailLoading ? (
           <div className="state-card">Loading automation run detail…</div>
@@ -375,7 +376,7 @@ export function AutomationRunsPage() {
         ) : (
           <EmptyState
             title="No run selected"
-            description="Choose a run from the table to inspect its logs, summary counts, and linked workflow outputs."
+            description="Choose a run to inspect."
           />
         )}
       </SectionCard>

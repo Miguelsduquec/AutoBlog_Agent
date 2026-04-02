@@ -2,6 +2,7 @@ import { api } from "../api/client";
 import { EmptyState } from "../components/EmptyState";
 import { SectionCard } from "../components/SectionCard";
 import { StatusBadge } from "../components/StatusBadge";
+import { TableShell } from "../components/TableShell";
 import { WebsiteScopeHeader } from "../components/WebsiteScopeHeader";
 import { useAsyncData } from "../hooks/useAsyncData";
 import { useSelectedWebsite } from "../hooks/useSelectedWebsite";
@@ -33,7 +34,7 @@ export function AnalysisPage() {
     <div className="page-stack">
       <WebsiteScopeHeader
         title="Website analysis"
-        description="Review extracted pages, metadata, headings, niche summary, and coverage signals."
+        description="Review what the scan found."
         websites={websitesQuery.data}
         selectedWebsiteId={selectedWebsiteId}
         onSelectWebsite={setSelectedWebsiteId}
@@ -48,7 +49,7 @@ export function AnalysisPage() {
               })()
             }
           >
-            Run fresh analysis
+            Run analysis
           </button>
         }
       />
@@ -58,7 +59,7 @@ export function AnalysisPage() {
       ) : (
         <>
           <div className="grid-two">
-            <SectionCard title="Niche summary and keywords" description="Latest mock-AI summary plus the strongest extracted keywords.">
+            <SectionCard title="Summary and keywords" description="Latest summary and key phrases.">
               <p className="detail-summary">{latestAnalysis.nicheSummary}</p>
               <div className="pill-row">
                 {(latestAnalysis.keywordsJson ?? latestAnalysis.contentPillarsJson).map((pillar) => (
@@ -68,7 +69,7 @@ export function AnalysisPage() {
                 ))}
               </div>
             </SectionCard>
-            <SectionCard title="Coverage overview" description="Snapshot of the current website profile.">
+            <SectionCard title="Coverage overview" description="How complete the scan is.">
               <div className="detail-list">
                 <div>
                   <strong>Analyzed pages</strong>
@@ -97,14 +98,14 @@ export function AnalysisPage() {
               <strong>{latestAnalysis.confidenceLevel === "low" ? "Low-confidence analysis" : "Medium-confidence analysis"}</strong>
               <p>
                 {latestAnalysis.confidenceLevel === "low"
-                  ? "The crawler found limited usable structure or content. Re-run analysis after checking the URL or website depth before generating opportunities."
-                  : "The website exposed a partial content profile. Opportunity generation is still available, but outputs should be reviewed more carefully."}
+                  ? "The crawler found limited structure or content. Re-run after checking the URL or site depth."
+                  : "The site exposed partial signals. Generated ideas should be reviewed more carefully."}
               </p>
             </div>
           ) : null}
 
-          <SectionCard title="Analyzed pages" description="Visible page signals extracted by the MVP crawler.">
-            <table className="data-table">
+          <SectionCard title="Analyzed pages" description="Visible page signals from the crawler.">
+            <TableShell label="Analysis pages">
               <thead>
                 <tr>
                   <th>URL</th>
@@ -125,7 +126,7 @@ export function AnalysisPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </TableShell>
           </SectionCard>
         </>
       )}

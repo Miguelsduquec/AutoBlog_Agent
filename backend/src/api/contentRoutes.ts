@@ -12,15 +12,15 @@ const exportJobService = new ExportJobService();
 
 router.get("/opportunities", (request, response) => {
   const websiteId = typeof request.query.websiteId === "string" ? request.query.websiteId : undefined;
-  response.json(opportunityService.listOpportunities(websiteId));
+  response.json(opportunityService.listOpportunities(String(response.locals.currentUser.id), websiteId));
 });
 
 router.post("/opportunities", (request, response) => {
-  response.status(201).json(opportunityService.createOpportunity(request.body));
+  response.status(201).json(opportunityService.createOpportunity(String(response.locals.currentUser.id), request.body));
 });
 
 router.put("/opportunities/:id", (request, response) => {
-  const updated = opportunityService.updateOpportunity(String(request.params.id), request.body);
+  const updated = opportunityService.updateOpportunity(String(response.locals.currentUser.id), String(request.params.id), request.body);
   if (!updated) {
     response.status(404).json({ message: "Opportunity not found." });
     return;
@@ -30,7 +30,7 @@ router.put("/opportunities/:id", (request, response) => {
 });
 
 router.delete("/opportunities/:id", (request, response) => {
-  const deleted = opportunityService.deleteOpportunity(String(request.params.id));
+  const deleted = opportunityService.deleteOpportunity(String(response.locals.currentUser.id), String(request.params.id));
   if (!deleted) {
     response.status(404).json({ message: "Opportunity not found." });
     return;
@@ -41,11 +41,11 @@ router.delete("/opportunities/:id", (request, response) => {
 
 router.get("/article-plans", (request, response) => {
   const websiteId = typeof request.query.websiteId === "string" ? request.query.websiteId : undefined;
-  response.json(articlePlanService.listPlans(websiteId));
+  response.json(articlePlanService.listPlans(String(response.locals.currentUser.id), websiteId));
 });
 
 router.get("/article-plans/:id", (request, response) => {
-  const plan = articlePlanService.getPlan(String(request.params.id));
+  const plan = articlePlanService.getPlan(String(response.locals.currentUser.id), String(request.params.id));
   if (!plan) {
     response.status(404).json({ message: "Article plan not found." });
     return;
@@ -56,6 +56,7 @@ router.get("/article-plans/:id", (request, response) => {
 
 router.post("/opportunities/:id/generate-plan", (request, response) => {
   const result = articlePlanService.generateFromOpportunity(
+    String(response.locals.currentUser.id),
     String(request.params.id),
     Boolean(request.body?.regenerate)
   );
@@ -64,11 +65,11 @@ router.post("/opportunities/:id/generate-plan", (request, response) => {
 
 router.get("/drafts", (request, response) => {
   const websiteId = typeof request.query.websiteId === "string" ? request.query.websiteId : undefined;
-  response.json(draftService.listDrafts(websiteId));
+  response.json(draftService.listDrafts(String(response.locals.currentUser.id), websiteId));
 });
 
 router.get("/drafts/:id", (request, response) => {
-  const draft = draftService.getDraft(String(request.params.id));
+  const draft = draftService.getDraft(String(response.locals.currentUser.id), String(request.params.id));
   if (!draft) {
     response.status(404).json({ message: "Draft not found." });
     return;
@@ -79,6 +80,7 @@ router.get("/drafts/:id", (request, response) => {
 
 router.post("/article-plans/:id/generate-draft", (request, response) => {
   const result = draftService.generateFromArticlePlan(
+    String(response.locals.currentUser.id),
     String(request.params.id),
     Boolean(request.body?.regenerate)
   );
@@ -86,20 +88,22 @@ router.post("/article-plans/:id/generate-draft", (request, response) => {
 });
 
 router.post("/drafts/:id/regenerate", (request, response) => {
-  response.json(draftService.regenerateSection(String(request.params.id), request.body.section));
+  response.json(
+    draftService.regenerateSection(String(response.locals.currentUser.id), String(request.params.id), request.body.section)
+  );
 });
 
 router.post("/drafts/:id/mark-ready", (request, response) => {
-  response.json(draftService.markReviewReady(String(request.params.id)));
+  response.json(draftService.markReviewReady(String(response.locals.currentUser.id), String(request.params.id)));
 });
 
 router.get("/exports", (request, response) => {
   const websiteId = typeof request.query.websiteId === "string" ? request.query.websiteId : undefined;
-  response.json(exportJobService.listExports(websiteId));
+  response.json(exportJobService.listExports(String(response.locals.currentUser.id), websiteId));
 });
 
 router.get("/exports/:id", (request, response) => {
-  const detail = exportJobService.getExport(String(request.params.id));
+  const detail = exportJobService.getExport(String(response.locals.currentUser.id), String(request.params.id));
   if (!detail) {
     response.status(404).json({ message: "Export job not found." });
     return;
@@ -109,7 +113,11 @@ router.get("/exports/:id", (request, response) => {
 });
 
 router.post("/drafts/:id/export", (request, response) => {
-  const result = exportJobService.createExport(String(request.params.id), Boolean(request.body?.reexport));
+  const result = exportJobService.createExport(
+    String(response.locals.currentUser.id),
+    String(request.params.id),
+    Boolean(request.body?.reexport)
+  );
   response.status(result.skipped || result.regenerated ? 200 : 201).json(result);
 });
 

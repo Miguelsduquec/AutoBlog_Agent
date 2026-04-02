@@ -1,5 +1,8 @@
 import {
+  AuthResponse,
+  AuthSnapshot,
   ArticlePlan,
+  BillingCheckoutSession,
   ContentGapGraderReport,
   AutomationRun,
   AutomationRunRequest,
@@ -10,9 +13,11 @@ import {
   ExportGenerationResult,
   ExportJob,
   ExportJobDetail,
+  LoginInput,
   OpportunityGenerationResult,
   OpportunityInput,
   PlanGenerationResult,
+  RegisterInput,
   SeoAuditRun,
   Website,
   WebsitePage,
@@ -22,19 +27,41 @@ import {
 } from "../types";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3001/api";
+let currentSessionToken: string | null = null;
+
+export class ApiError extends Error {
+  readonly status: number;
+  readonly code?: string;
+
+  constructor(message: string, status: number, code?: string) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.code = code;
+  }
+}
+
+export function setApiSessionToken(sessionToken: string | null) {
+  currentSessionToken = sessionToken;
+}
+
+export function isApiError(error: unknown): error is ApiError {
+  return error instanceof ApiError;
+}
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
+      ...(currentSessionToken ? { Authorization: `Bearer ${currentSessionToken}` } : {}),
       ...(options?.headers ?? {})
     }
   });
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ message: "Request failed." }));
-    throw new Error(error.message ?? "Request failed.");
+    throw new ApiError(error.message ?? "Request failed.", response.status, error.code);
   }
 
   if (response.status === 204) {
@@ -54,6 +81,25 @@ function withQuery(path: string, websiteId?: string): string {
 }
 
 export const api = {
+  getSession: () => request<AuthSnapshot>("/auth/session"),
+  register: (payload: RegisterInput) =>
+    request<AuthResponse>("/auth/register", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    }),
+  login: (payload: LoginInput) =>
+    request<AuthResponse>("/auth/login", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    }),
+  logout: () =>
+    request<void>("/auth/logout", {
+      method: "POST"
+    }),
+  createCheckoutSession: () =>
+    request<BillingCheckoutSession>("/billing/create-checkout-session", {
+      method: "POST"
+    }),
   getDashboard: () => request<DashboardSnapshot>("/dashboard"),
   getWebsites: () => request<Website[]>("/websites"),
   getWebsiteDetail: (websiteId: string) => request<WebsiteDetail>(`/websites/${websiteId}`),

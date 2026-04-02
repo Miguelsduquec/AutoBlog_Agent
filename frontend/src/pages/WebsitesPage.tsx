@@ -1,9 +1,10 @@
-import { FormEvent, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { api } from "../api/client";
 import { EmptyState } from "../components/EmptyState";
 import { SectionCard } from "../components/SectionCard";
 import { StatusBadge } from "../components/StatusBadge";
+import { TableShell } from "../components/TableShell";
 import { useAsyncData } from "../hooks/useAsyncData";
 import { Website, WebsiteInput } from "../types";
 import { formatDate } from "../utils/format";
@@ -20,6 +21,7 @@ const initialWebsiteForm: WebsiteInput = {
 };
 
 export function WebsitesPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const websitesQuery = useAsyncData(api.getWebsites, []);
   const [formState, setFormState] = useState<WebsiteInput>(initialWebsiteForm);
   const [editingWebsite, setEditingWebsite] = useState<Website | null>(null);
@@ -27,6 +29,19 @@ export function WebsitesPage() {
   const [formError, setFormError] = useState<string>("");
 
   const websiteCountLabel = useMemo(() => websitesQuery.data?.length ?? 0, [websitesQuery.data]);
+  const prefillDomain = searchParams.get("prefillDomain") ?? "";
+
+  useEffect(() => {
+    if (!prefillDomain || editingWebsite) {
+      return;
+    }
+
+    setFormState((current) => ({
+      ...current,
+      domain: current.domain || prefillDomain,
+      name: current.name || new URL(prefillDomain).hostname.replace(/^www\./, "").split(".")[0]
+    }));
+  }, [editingWebsite, prefillDomain]);
 
   function beginEdit(website: Website) {
     setEditingWebsite(website);
@@ -57,6 +72,10 @@ export function WebsitesPage() {
         await api.updateWebsite(editingWebsite.id, formState);
       } else {
         await api.createWebsite(formState);
+        if (prefillDomain) {
+          searchParams.delete("prefillDomain");
+          setSearchParams(searchParams, { replace: true });
+        }
       }
 
       resetForm();
@@ -69,7 +88,7 @@ export function WebsitesPage() {
   }
 
   async function handleDelete(website: Website) {
-    const confirmed = window.confirm(`Delete ${website.name}? This will remove its Phase 1 data from the local workspace.`);
+    const confirmed = window.confirm(`Delete ${website.name}? This will remove its saved data from this workspace.`);
     if (!confirmed) {
       return;
     }
@@ -93,8 +112,8 @@ export function WebsitesPage() {
     <div className="page-stack">
       <div className="page-toolbar">
         <div>
-          <h1>Website portfolio</h1>
-          <p>Manually add websites, define the content strategy context, and open each workflow from one list.</p>
+          <h1>Websites</h1>
+          <p>Add a website to get started.</p>
         </div>
         <div className="topbar-pill">{websiteCountLabel} websites</div>
       </div>
@@ -102,11 +121,11 @@ export function WebsitesPage() {
       {formError ? <div className="state-card error">{formError}</div> : null}
 
       <div className="grid-two wide-right">
-        <SectionCard title="Tracked websites" description="Each website becomes its own analysis, opportunity, and drafting workspace.">
+        <SectionCard title="Tracked websites" description="All saved websites.">
           {websitesQuery.data.length === 0 ? (
-            <EmptyState title="No websites added yet" description="Add your first website to start the workflow." />
+            <EmptyState title="No websites added yet" description="Add your first website to get started." />
           ) : (
-            <table className="data-table">
+            <TableShell label="Tracked websites">
               <thead>
                 <tr>
                   <th>Website</th>
@@ -146,15 +165,15 @@ export function WebsitesPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </TableShell>
           )}
         </SectionCard>
 
         <SectionCard
           title={editingWebsite ? "Edit website" : "Add website"}
-          description="The first version keeps setup manual so the website context is explicit and reliable."
+          description="Basic setup for one website."
         >
-          <form className="form-grid" onSubmit={handleSubmit}>
+          <form className="form-grid" data-testid="website-form" onSubmit={handleSubmit}>
             <label>
               Website name
               <input value={formState.name} onChange={(event) => setFormState({ ...formState, name: event.target.value })} />
@@ -203,7 +222,7 @@ export function WebsitesPage() {
               </select>
             </label>
             <div className="form-actions span-2">
-              <button className="button" disabled={submitting} type="submit">
+              <button className="button" data-testid="website-submit" disabled={submitting} type="submit">
                 {submitting ? (editingWebsite ? "Saving…" : "Adding website…") : editingWebsite ? "Save changes" : "Add website"}
               </button>
               {editingWebsite ? (

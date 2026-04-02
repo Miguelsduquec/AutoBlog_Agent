@@ -25,7 +25,13 @@ export function WebsiteScopeHeader({
         <p>{description}</p>
       </div>
       <div className="toolbar-controls">
-        <select value={selectedWebsiteId} onChange={(event) => onSelectWebsite(event.target.value)}>
+        <select
+          aria-label="Website"
+          disabled={websites.length === 0}
+          value={selectedWebsiteId}
+          onChange={(event) => onSelectWebsite(event.target.value)}
+        >
+          {websites.length === 0 ? <option value="">No websites yet</option> : null}
           {websites.map((website) => (
             <option key={website.id} value={website.id}>
               {website.name}

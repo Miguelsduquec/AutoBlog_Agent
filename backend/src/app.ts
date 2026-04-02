@@ -1,6 +1,7 @@
 import cors from "cors";
 import express from "express";
 import path from "node:path";
+import { billingWebhookHandler, billingWebhookMiddleware } from "./api/billingRoutes";
 import { apiRouter } from "./api/router";
 import { config } from "./config";
 import { seedDatabase } from "./db/seed";
@@ -19,6 +20,7 @@ export function createApp(options: CreateAppOptions = {}) {
   const app = express();
 
   app.use(cors());
+  app.post("/api/billing/webhook", billingWebhookMiddleware, billingWebhookHandler);
   app.use(express.json({ limit: "1mb" }));
   app.use("/exports", express.static(config.exportsDir));
 
@@ -35,7 +37,8 @@ export function createApp(options: CreateAppOptions = {}) {
   app.use((error: Error, _request: express.Request, response: express.Response, _next: express.NextFunction) => {
     const statusCode = isHttpError(error) ? error.statusCode : 500;
     response.status(statusCode).json({
-      message: error.message || "Unexpected server error"
+      message: error.message || "Unexpected server error",
+      ...(isHttpError(error) && error.code ? { code: error.code } : {})
     });
   });
 

@@ -1,12 +1,21 @@
 import { describe, expect, it, vi } from "vitest";
 import { createApp } from "../../src/app";
 import { WebsiteCrawler } from "../../src/crawlers/websiteCrawler";
+import { DEMO_USER_EMAIL, DEMO_USER_PASSWORD } from "../../src/db/seedData";
+import { authHeaders, loginUser } from "../helpers/auth";
 import { invokeApp } from "../helpers/invokeApp";
 
 const app = createApp({ seed: false });
 
+async function loginDemoUser() {
+  const { sessionToken } = await loginUser(app, DEMO_USER_EMAIL, DEMO_USER_PASSWORD);
+  return sessionToken;
+}
+
 describe("Content workflow API", () => {
   it("analyzes a website and returns extracted signals", async () => {
+    const sessionToken = await loginDemoUser();
+
     vi.spyOn(WebsiteCrawler.prototype, "crawlWebsite").mockResolvedValue([
       {
         url: "https://polped.com",
@@ -32,7 +41,8 @@ describe("Content workflow API", () => {
 
     const response = await invokeApp(app, {
       method: "POST",
-      url: "/api/websites/site-polped/analyze"
+      url: "/api/websites/site-polped/analyze",
+      headers: authHeaders(sessionToken)
     });
 
     expect(response.status).toBe(200);
@@ -42,11 +52,14 @@ describe("Content workflow API", () => {
     expect((response.body as any).pages).toHaveLength(2);
   });
 
-  it("creates a plan, draft, and export through the public API", async () => {
+  it("creates opportunities, plans, drafts, and exports through the authenticated API", async () => {
+    const sessionToken = await loginDemoUser();
+
     const opportunitiesResponse = await invokeApp(app, {
       method: "POST",
       url: "/api/websites/site-greenforge/generate-opportunities",
-      body: { limit: 6 }
+      body: { limit: 6 },
+      headers: authHeaders(sessionToken)
     });
 
     expect(opportunitiesResponse.status).toBe(200);
@@ -57,7 +70,8 @@ describe("Content workflow API", () => {
     const planResponse = await invokeApp(app, {
       method: "POST",
       url: `/api/opportunities/${opportunityId}/generate-plan`,
-      body: {}
+      body: {},
+      headers: authHeaders(sessionToken)
     });
     const planId = (planResponse.body as any).plan.id as string;
 
@@ -68,7 +82,8 @@ describe("Content workflow API", () => {
     const draftResponse = await invokeApp(app, {
       method: "POST",
       url: `/api/article-plans/${planId}/generate-draft`,
-      body: {}
+      body: {},
+      headers: authHeaders(sessionToken)
     });
     const draftId = (draftResponse.body as any).draft.id as string;
 
@@ -79,7 +94,8 @@ describe("Content workflow API", () => {
     const exportResponse = await invokeApp(app, {
       method: "POST",
       url: `/api/drafts/${draftId}/export`,
-      body: {}
+      body: {},
+      headers: authHeaders(sessionToken)
     });
 
     expect(exportResponse.status).toBe(201);
@@ -143,6 +159,8 @@ describe("Content workflow API", () => {
   });
 
   it("validates website URLs when creating tracked websites", async () => {
+    const sessionToken = await loginDemoUser();
+
     const response = await invokeApp(app, {
       method: "POST",
       url: "/api/websites",
@@ -155,7 +173,8 @@ describe("Content workflow API", () => {
         tone: "Neutral",
         contentGoal: "Generate leads",
         publishingFrequency: "Weekly"
-      }
+      },
+      headers: authHeaders(sessionToken)
     });
 
     expect(response.status).toBe(400);

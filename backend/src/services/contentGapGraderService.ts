@@ -68,6 +68,7 @@ function buildVirtualWebsite(url: string): Website {
 
   return {
     id: "grader-preview",
+    userId: "public-tool",
     name: websiteName,
     domain: url,
     language: inferLanguage(hostname),

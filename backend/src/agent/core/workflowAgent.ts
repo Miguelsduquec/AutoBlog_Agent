@@ -20,11 +20,11 @@ export class WorkflowAgent {
     return this.seoAuditTool.execute(websiteId);
   }
 
-  async findArticleOpportunities(websiteId: string, limit = 8) {
-    return this.opportunityTool.execute(websiteId, limit);
+  async findArticleOpportunities(userId: string, websiteId: string, limit = 8) {
+    return this.opportunityTool.execute(userId, websiteId, limit);
   }
 
-  async generateArticlePlans(websiteId: string, limit = 5) {
-    return this.planTool.execute(websiteId, limit);
+  async generateArticlePlans(userId: string, websiteId: string, limit = 5) {
+    return this.planTool.execute(userId, websiteId, limit);
   }
 }
