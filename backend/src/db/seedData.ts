@@ -50,6 +50,7 @@ export function getSeedData(): {
       email: DEMO_USER_EMAIL,
       name: "Demo User",
       passwordHash: seedPasswordHash(DEMO_USER_PASSWORD),
+      googleSub: "",
       stripeCustomerId: "cus_demo_autoblog",
       createdAt: daysAgo(30),
       updatedAt: hoursAgo(2)

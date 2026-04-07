@@ -171,7 +171,7 @@ export function LandingPage() {
 
       <section className="landing-cta">
         <h2>Turn website knowledge into continuous article generation</h2>
-        <p>Start with the free score.</p>
+        <p>Start with the public content gap grader.</p>
         <Link className="button" to="/tools/content-gap-grader">
           Start with the free grader
         </Link>

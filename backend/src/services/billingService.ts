@@ -1,7 +1,7 @@
 import Stripe from "stripe";
 import { config } from "../config";
 import { subscriptionRepository, userRepository } from "../repositories/authRepository";
-import { BillingCheckoutSession, Subscription, SubscriptionStatus, User } from "../types";
+import { BillingCheckoutInput, BillingCheckoutSession, BillingPlan, Subscription, SubscriptionStatus, User } from "../types";
 import { HttpError } from "../utils/errors";
 import { createId } from "../utils/ids";
 
@@ -11,6 +11,10 @@ type WebhookEnvelope = {
     object: Record<string, unknown>;
   };
 };
+
+function readMetadata(object: Record<string, unknown>): Record<string, unknown> | undefined {
+  return typeof object.metadata === "object" && object.metadata ? (object.metadata as Record<string, unknown>) : undefined;
+}
 
 function toIsoFromUnix(value: unknown): string {
   if (typeof value === "number" && Number.isFinite(value) && value > 0) {
@@ -22,7 +26,11 @@ function toIsoFromUnix(value: unknown): string {
 
 function normalizeSubscriptionStatus(value: unknown): SubscriptionStatus {
   const normalized = String(value ?? "inactive").toLowerCase();
-  if (normalized === "trialing" || normalized === "active" || normalized === "past_due" || normalized === "canceled" || normalized === "unpaid") {
+  if (normalized === "trialing") {
+    return "active";
+  }
+
+  if (normalized === "active" || normalized === "past_due" || normalized === "canceled" || normalized === "unpaid") {
     return normalized;
   }
 
@@ -38,6 +46,26 @@ function readPriceId(value: unknown): string {
   return typeof record.id === "string" ? record.id : "";
 }
 
+function parseBillingPlan(value: unknown): BillingPlan {
+  if (value == null || value === "") {
+    return "monthly";
+  }
+
+  const normalized = String(value).toLowerCase();
+  if (normalized === "monthly" || normalized === "yearly") {
+    return normalized;
+  }
+
+  throw new HttpError(400, "Select a valid billing plan.", "invalid_billing_plan");
+}
+
+function readPeriodEndFromInvoice(object: Record<string, unknown>): string {
+  const lines = object.lines as Record<string, unknown> | undefined;
+  const firstLine = Array.isArray(lines?.data) ? (lines.data[0] as Record<string, unknown> | undefined) : undefined;
+  const period = firstLine?.period as Record<string, unknown> | undefined;
+  return toIsoFromUnix(period?.end ?? object.period_end);
+}
+
 export class BillingService {
   private readonly stripe =
     config.billingMode === "stripe" && config.stripeSecretKey
@@ -46,31 +74,34 @@ export class BillingService {
         })
       : null;
 
-  async createCheckoutSession(user: User): Promise<BillingCheckoutSession> {
-    if (this.stripe) {
-      if (!config.stripePriceId) {
-        throw new HttpError(500, "STRIPE_PRICE_ID is missing.", "stripe_config_missing");
-      }
+  async createCheckoutSession(user: User, input: BillingCheckoutInput = {}): Promise<BillingCheckoutSession> {
+    const plan = parseBillingPlan(input.plan);
+    const priceId = this.resolvePriceId(plan);
 
+    if (this.stripe) {
       const customerId = await this.ensureStripeCustomer(user);
       const session = await this.stripe.checkout.sessions.create({
         mode: "subscription",
         customer: customerId,
         line_items: [
           {
-            price: config.stripePriceId,
+            price: priceId,
             quantity: 1
           }
         ],
-        success_url: `${config.appUrl}/pricing?checkout=success`,
-        cancel_url: `${config.appUrl}/pricing?checkout=cancelled`,
+        success_url: `${config.stripeCheckoutSuccessUrl}${config.stripeCheckoutSuccessUrl.includes("?") ? "&" : "?"}plan=${plan}`,
+        cancel_url: `${config.stripeCheckoutCancelUrl}${config.stripeCheckoutCancelUrl.includes("?") ? "&" : "?"}plan=${plan}`,
         allow_promotion_codes: true,
         metadata: {
-          userId: user.id
+          userId: user.id,
+          email: user.email,
+          selectedPlan: plan
         },
         subscription_data: {
           metadata: {
-            userId: user.id
+            userId: user.id,
+            email: user.email,
+            selectedPlan: plan
           }
         }
       });
@@ -79,7 +110,7 @@ export class BillingService {
         userId: user.id,
         stripeCustomerId: customerId,
         stripeSubscriptionId: "",
-        stripePriceId: config.stripePriceId,
+        stripePriceId: priceId,
         stripeCheckoutSessionId: session.id,
         status: "inactive",
         currentPeriodEnd: ""
@@ -87,19 +118,23 @@ export class BillingService {
 
       return {
         id: session.id,
-        url: session.url ?? `${config.appUrl}/pricing?checkout=created`
+        url: session.url ?? `${config.appUrl}/pricing?checkout=created&plan=${plan}`,
+        plan,
+        priceId
       };
     }
 
     const mockSessionId = `cs_mock_${createId("checkout")}`;
     const mockSubscriptionId = `sub_mock_${user.id}`;
-    const currentPeriodEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    const currentPeriodEnd = new Date(
+      Date.now() + (plan === "yearly" ? 365 : 30) * 24 * 60 * 60 * 1000
+    ).toISOString();
 
     this.upsertSubscription({
       userId: user.id,
       stripeCustomerId: user.stripeCustomerId || `cus_mock_${user.id}`,
       stripeSubscriptionId: mockSubscriptionId,
-      stripePriceId: config.stripePriceId || "price_mock_monthly",
+      stripePriceId: priceId,
       stripeCheckoutSessionId: mockSessionId,
       status: "active",
       currentPeriodEnd
@@ -107,14 +142,32 @@ export class BillingService {
 
     return {
       id: mockSessionId,
-      url: `${config.appUrl}/pricing?checkout=success&mock=1`
+      url: `${config.appUrl}/pricing?checkout=success&mock=1&plan=${plan}`,
+      plan,
+      priceId
     };
   }
 
   async handleWebhook(rawBody: Buffer | string, signature?: string): Promise<{ received: true }> {
-    const event = this.stripe && config.stripeWebhookSecret && signature
-      ? this.stripe.webhooks.constructEvent(rawBody, signature, config.stripeWebhookSecret)
-      : (typeof rawBody === "string" ? JSON.parse(rawBody) : JSON.parse(rawBody.toString("utf8"))) as WebhookEnvelope;
+    let event: Stripe.Event | WebhookEnvelope;
+
+    if (config.billingMode === "stripe") {
+      if (!this.stripe || !config.stripeWebhookSecret) {
+        throw new HttpError(500, "Stripe webhook configuration is incomplete.", "stripe_config_missing");
+      }
+
+      if (!signature) {
+        throw new HttpError(400, "Stripe webhook signature is missing.", "invalid_webhook_signature");
+      }
+    }
+
+    try {
+      event = this.stripe && config.stripeWebhookSecret && signature
+        ? this.stripe.webhooks.constructEvent(rawBody, signature, config.stripeWebhookSecret)
+        : (typeof rawBody === "string" ? JSON.parse(rawBody) : JSON.parse(rawBody.toString("utf8"))) as WebhookEnvelope;
+    } catch {
+      throw new HttpError(400, "Stripe webhook verification failed.", "invalid_webhook_signature");
+    }
 
     await this.applyEvent(event.type, event.data.object as Record<string, unknown>);
     return { received: true };
@@ -144,20 +197,26 @@ export class BillingService {
   }
 
   private handleCheckoutCompleted(object: Record<string, unknown>) {
+    const metadata = readMetadata(object);
     const userId =
-      typeof object.metadata === "object" && object.metadata && typeof (object.metadata as Record<string, unknown>).userId === "string"
-        ? String((object.metadata as Record<string, unknown>).userId)
+      metadata && typeof metadata.userId === "string"
+        ? String(metadata.userId)
         : this.findUserIdFromEvent(object);
 
     if (!userId) {
       return;
     }
 
+    const existing = subscriptionRepository.getByUserId(userId);
+    const plan = parseBillingPlan(metadata?.selectedPlan);
+    const stripeCustomerId = String(object.customer ?? existing?.stripeCustomerId ?? "");
+    this.syncUserStripeCustomerId(userId, stripeCustomerId);
+
     this.upsertSubscription({
       userId,
-      stripeCustomerId: String(object.customer ?? ""),
+      stripeCustomerId,
       stripeSubscriptionId: String(object.subscription ?? ""),
-      stripePriceId: config.stripePriceId || "",
+      stripePriceId: existing?.stripePriceId || this.resolvePriceId(plan),
       stripeCheckoutSessionId: String(object.id ?? ""),
       status: "active",
       currentPeriodEnd: ""
@@ -171,14 +230,16 @@ export class BillingService {
     }
 
     const existing = subscriptionRepository.getByUserId(userId);
+    const stripeCustomerId = String(object.customer ?? existing?.stripeCustomerId ?? "");
+    this.syncUserStripeCustomerId(userId, stripeCustomerId);
     this.upsertSubscription({
       userId,
-      stripeCustomerId: String(object.customer ?? existing?.stripeCustomerId ?? ""),
+      stripeCustomerId,
       stripeSubscriptionId: String(object.subscription ?? existing?.stripeSubscriptionId ?? ""),
       stripePriceId: existing?.stripePriceId ?? "",
       stripeCheckoutSessionId: existing?.stripeCheckoutSessionId ?? "",
       status: "active",
-      currentPeriodEnd: existing?.currentPeriodEnd ?? ""
+      currentPeriodEnd: readPeriodEndFromInvoice(object) || (existing?.currentPeriodEnd ?? "")
     });
   }
 
@@ -196,10 +257,12 @@ export class BillingService {
     const itemData = Array.isArray(items?.data) ? (items?.data?.[0] as Record<string, unknown> | undefined) : undefined;
     const price = itemData?.price;
     const existing = subscriptionRepository.getByUserId(userId);
+    const stripeCustomerId = String(object.customer ?? existing?.stripeCustomerId ?? "");
+    this.syncUserStripeCustomerId(userId, stripeCustomerId);
 
     this.upsertSubscription({
       userId,
-      stripeCustomerId: String(object.customer ?? existing?.stripeCustomerId ?? ""),
+      stripeCustomerId,
       stripeSubscriptionId: String(object.id ?? existing?.stripeSubscriptionId ?? ""),
       stripePriceId: readPriceId(price) || existing?.stripePriceId || "",
       stripeCheckoutSessionId: existing?.stripeCheckoutSessionId ?? "",
@@ -239,6 +302,51 @@ export class BillingService {
     }
 
     return "";
+  }
+
+  private resolvePriceId(plan: BillingPlan): string {
+    const monthly = config.stripePriceIdMonthly || config.stripePriceId;
+    const yearly = config.stripePriceIdYearly;
+
+    if (this.stripe) {
+      const selected = plan === "yearly" ? yearly : monthly;
+      if (!selected) {
+        throw new HttpError(
+          500,
+          plan === "yearly" ? "STRIPE_PRICE_ID_YEARLY is missing." : "STRIPE_PRICE_ID_MONTHLY is missing.",
+          "stripe_config_missing"
+        );
+      }
+
+      return selected;
+    }
+
+    if (config.billingMode === "stripe") {
+      throw new HttpError(500, "Stripe billing is enabled but STRIPE_SECRET_KEY is missing.", "stripe_config_missing");
+    }
+
+    if (plan === "yearly") {
+      return yearly || "price_mock_yearly";
+    }
+
+    return monthly || "price_mock_monthly";
+  }
+
+  private syncUserStripeCustomerId(userId: string, stripeCustomerId: string): void {
+    if (!stripeCustomerId) {
+      return;
+    }
+
+    const user = userRepository.getById(userId);
+    if (!user || user.stripeCustomerId === stripeCustomerId) {
+      return;
+    }
+
+    userRepository.update({
+      ...user,
+      stripeCustomerId,
+      updatedAt: new Date().toISOString()
+    });
   }
 
   private upsertSubscription(input: {

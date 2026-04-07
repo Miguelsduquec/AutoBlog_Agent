@@ -15,6 +15,13 @@ export const userRepository = {
     return row ? mapUser(row) : null;
   },
 
+  getByGoogleSub(googleSub: string): User | null {
+    const row = db
+      .prepare("SELECT * FROM users WHERE google_sub = ? LIMIT 1")
+      .get(googleSub) as Record<string, unknown> | undefined;
+    return row ? mapUser(row) : null;
+  },
+
   getByStripeCustomerId(stripeCustomerId: string): User | null {
     const row = db
       .prepare("SELECT * FROM users WHERE stripe_customer_id = ? LIMIT 1")
@@ -25,9 +32,18 @@ export const userRepository = {
   create(user: User): User {
     db.prepare(`
       INSERT INTO users (
-        id, email, name, password_hash, stripe_customer_id, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).run(user.id, user.email, user.name, user.passwordHash, user.stripeCustomerId, user.createdAt, user.updatedAt);
+        id, email, name, password_hash, google_sub, stripe_customer_id, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      user.id,
+      user.email,
+      user.name,
+      user.passwordHash,
+      user.googleSub,
+      user.stripeCustomerId,
+      user.createdAt,
+      user.updatedAt
+    );
 
     return user;
   },
@@ -35,9 +51,9 @@ export const userRepository = {
   update(user: User): User {
     db.prepare(`
       UPDATE users
-      SET email = ?, name = ?, password_hash = ?, stripe_customer_id = ?, updated_at = ?
+      SET email = ?, name = ?, password_hash = ?, google_sub = ?, stripe_customer_id = ?, updated_at = ?
       WHERE id = ?
-    `).run(user.email, user.name, user.passwordHash, user.stripeCustomerId, user.updatedAt, user.id);
+    `).run(user.email, user.name, user.passwordHash, user.googleSub, user.stripeCustomerId, user.updatedAt, user.id);
 
     return user;
   }

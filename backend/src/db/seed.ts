@@ -27,8 +27,8 @@ export function seedDatabase(reset = false): void {
 
   const insertUser = db.prepare(`
     INSERT OR IGNORE INTO users (
-      id, email, name, password_hash, stripe_customer_id, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+      id, email, name, password_hash, google_sub, stripe_customer_id, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   for (const user of seed.users) {
@@ -37,6 +37,7 @@ export function seedDatabase(reset = false): void {
       user.email,
       user.name,
       user.passwordHash,
+      user.googleSub,
       user.stripeCustomerId,
       user.createdAt,
       user.updatedAt

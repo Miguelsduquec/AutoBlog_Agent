@@ -30,6 +30,75 @@ function ensureColumn(tableName: string, columnName: string, definition: string)
   }
 }
 
+ensureColumn("users", "stripe_customer_id", "TEXT NOT NULL DEFAULT ''");
+ensureColumn("users", "google_sub", "TEXT NOT NULL DEFAULT ''");
+
+function migrateUsersPasswordHashToNullable(): void {
+  const columns = sqlite
+    .prepare("PRAGMA table_info(users)")
+    .all() as Array<{ name: string; notnull: number }>;
+
+  if (columns.length === 0) {
+    return;
+  }
+
+  const passwordColumn = columns.find((column) => column.name === "password_hash");
+  if (!passwordColumn) {
+    return;
+  }
+
+  if (passwordColumn.notnull !== 1) {
+    sqlite.prepare("UPDATE users SET password_hash = NULL WHERE password_hash = ''").run();
+    return;
+  }
+
+  const hasGoogleSub = columns.some((column) => column.name === "google_sub");
+  const hasStripeCustomerId = columns.some((column) => column.name === "stripe_customer_id");
+
+  sqlite.pragma("foreign_keys = OFF");
+
+  try {
+    sqlite.exec("BEGIN");
+    sqlite.exec(`
+      CREATE TABLE users_new (
+        id TEXT PRIMARY KEY,
+        email TEXT NOT NULL UNIQUE,
+        name TEXT NOT NULL DEFAULT '',
+        password_hash TEXT,
+        google_sub TEXT NOT NULL DEFAULT '',
+        stripe_customer_id TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )
+    `);
+    sqlite.exec(`
+      INSERT INTO users_new (
+        id, email, name, password_hash, google_sub, stripe_customer_id, created_at, updated_at
+      )
+      SELECT
+        id,
+        email,
+        name,
+        NULLIF(password_hash, ''),
+        ${hasGoogleSub ? "COALESCE(google_sub, '')" : "''"},
+        ${hasStripeCustomerId ? "COALESCE(stripe_customer_id, '')" : "''"},
+        created_at,
+        updated_at
+      FROM users
+    `);
+    sqlite.exec("DROP TABLE users");
+    sqlite.exec("ALTER TABLE users_new RENAME TO users");
+    sqlite.exec("COMMIT");
+  } catch (error) {
+    sqlite.exec("ROLLBACK");
+    throw error;
+  } finally {
+    sqlite.pragma("foreign_keys = ON");
+  }
+}
+
+migrateUsersPasswordHashToNullable();
+
 function ensureIndex(statement: string): void {
   sqlite.exec(statement);
 }
@@ -52,6 +121,7 @@ ensureColumn("article_plans", "search_intent", "TEXT NOT NULL DEFAULT 'informati
 ensureColumn("automation_runs", "updated_at", "TEXT NOT NULL DEFAULT ''");
 ensureColumn("websites", "user_id", "TEXT NOT NULL DEFAULT ''");
 ensureColumn("users", "stripe_customer_id", "TEXT NOT NULL DEFAULT ''");
+ensureColumn("users", "google_sub", "TEXT NOT NULL DEFAULT ''");
 ensureColumn("subscriptions", "stripe_checkout_session_id", "TEXT NOT NULL DEFAULT ''");
 ensureColumn("subscriptions", "current_period_end", "TEXT NOT NULL DEFAULT ''");
 ensureColumn("user_sessions", "last_seen_at", "TEXT NOT NULL DEFAULT ''");
@@ -74,6 +144,7 @@ ensureIndex("CREATE INDEX IF NOT EXISTS idx_websites_user_updated ON websites (u
 ensureIndex("CREATE INDEX IF NOT EXISTS idx_user_sessions_user_created ON user_sessions (user_id, created_at DESC)");
 ensureIndex("CREATE INDEX IF NOT EXISTS idx_subscriptions_user_updated ON subscriptions (user_id, updated_at DESC)");
 ensureIndex("CREATE INDEX IF NOT EXISTS idx_users_email ON users (email)");
+ensureIndex("CREATE INDEX IF NOT EXISTS idx_users_google_sub ON users (google_sub)");
 ensureIndex("CREATE INDEX IF NOT EXISTS idx_subscriptions_customer ON subscriptions (stripe_customer_id)");
 ensureIndex("CREATE INDEX IF NOT EXISTS idx_subscriptions_status ON subscriptions (status)");
 
@@ -92,6 +163,10 @@ ensureUniqueIndex(
 ensureUniqueIndex(
   "CREATE UNIQUE INDEX IF NOT EXISTS idx_export_jobs_draft_unique ON export_jobs (draft_id)",
   "idx_export_jobs_draft_unique"
+);
+ensureUniqueIndex(
+  "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_sub_unique ON users (google_sub) WHERE google_sub <> ''",
+  "idx_users_google_sub_unique"
 );
 ensureUniqueIndex(
   "CREATE UNIQUE INDEX IF NOT EXISTS idx_subscriptions_customer_subscription_unique ON subscriptions (stripe_subscription_id) WHERE stripe_subscription_id <> ''",

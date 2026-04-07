@@ -11,6 +11,8 @@ process.env.NODE_ENV = "test";
 process.env.PORT = "0";
 process.env.DB_PATH = path.join(testRoot, "autoblog-agent.test.db");
 process.env.EXPORTS_DIR = path.join(testRoot, "exports");
+process.env.BILLING_MODE = "mock";
+process.env.GOOGLE_AUTH_MODE = "mock";
 
 fs.mkdirSync(process.env.EXPORTS_DIR, { recursive: true });
 

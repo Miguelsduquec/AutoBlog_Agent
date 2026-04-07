@@ -4,7 +4,8 @@ export const schemaStatements = [
       id TEXT PRIMARY KEY,
       email TEXT NOT NULL UNIQUE,
       name TEXT NOT NULL DEFAULT '',
-      password_hash TEXT NOT NULL,
+      password_hash TEXT,
+      google_sub TEXT NOT NULL DEFAULT '',
       stripe_customer_id TEXT NOT NULL DEFAULT '',
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL

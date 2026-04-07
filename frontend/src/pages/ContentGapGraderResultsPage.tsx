@@ -1,6 +1,5 @@
 import { CSSProperties, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { useAccess } from "../access/AccessContext";
 import { api } from "../api/client";
 import { ContentGapGraderForm } from "../components/ContentGapGraderForm";
 import { GlobalHeader } from "../components/GlobalHeader";
@@ -27,7 +26,6 @@ function scoreLabel(score: number): string {
 
 export function ContentGapGraderResultsPage() {
   const navigate = useNavigate();
-  const { auth } = useAccess();
   const [searchParams] = useSearchParams();
   const requestedUrl = searchParams.get("url") ?? "";
   const [urlInput, setUrlInput] = useState(requestedUrl);
@@ -208,9 +206,9 @@ export function ContentGapGraderResultsPage() {
                 <Link
                   className="button secondary"
                   data-testid="grader-upgrade-cta"
-                  to={auth.isAuthenticated && auth.hasActiveSubscription ? "/app/dashboard" : pricingHref}
+                  to={pricingHref}
                 >
-                  {auth.isAuthenticated && auth.hasActiveSubscription ? "Open Autoblog Agent" : "See pricing"}
+                  Use Autoblog Agent with a paid subscription
                 </Link>
                 {shareFeedback ? <span className="muted-copy">{shareFeedback}</span> : null}
               </div>
@@ -342,11 +340,11 @@ export function ContentGapGraderResultsPage() {
               <div>
                 <span className="eyebrow">Autoblog Agent</span>
                 <h2>Want to fix these gaps automatically?</h2>
-                <p>Generate plans and drafts with Autoblog Agent.</p>
+                <p>Use Autoblog Agent with a paid subscription to turn these gaps into a working content pipeline.</p>
               </div>
               <div className="hero-actions">
-                <Link className="button" to={auth.isAuthenticated && auth.hasActiveSubscription ? "/app/dashboard" : pricingHref}>
-                  {auth.isAuthenticated && auth.hasActiveSubscription ? "Open app" : "See pricing"}
+                <Link className="button" to={pricingHref}>
+                  Use Autoblog Agent with a paid subscription
                 </Link>
                 <Link className="button secondary" to="/tools/content-gap-grader">
                   Run another website

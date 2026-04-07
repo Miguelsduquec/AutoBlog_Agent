@@ -1,6 +1,5 @@
 import { CSSProperties, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAccess } from "../access/AccessContext";
 import { ContentGapGraderForm } from "../components/ContentGapGraderForm";
 import { GlobalHeader } from "../components/GlobalHeader";
 import { usePageMeta } from "../hooks/usePageMeta";
@@ -11,7 +10,6 @@ const META_DESCRIPTION =
 
 export function ContentGapGraderPage() {
   const navigate = useNavigate();
-  const { auth } = useAccess();
   const [url, setUrl] = useState("");
   const previewScoreStyle = { "--score": 62 } as CSSProperties;
 
@@ -134,11 +132,11 @@ export function ContentGapGraderPage() {
         <div>
           <span className="eyebrow">Next step</span>
           <h2>Want to fix these gaps automatically?</h2>
-          <p>Subscribe to generate plans and drafts in Autoblog Agent.</p>
+          <p>Use Autoblog Agent with a paid subscription to generate plans, drafts, and exports.</p>
         </div>
         <div className="hero-actions">
-          <Link className="button" to={auth.isAuthenticated && auth.hasActiveSubscription ? "/app/dashboard" : "/pricing"}>
-            {auth.isAuthenticated && auth.hasActiveSubscription ? "Open app" : "See pricing"}
+          <Link className="button" to="/pricing">
+            Use Autoblog Agent with a paid subscription
           </Link>
           <button className="button secondary" data-testid="grader-secondary-submit" onClick={handleSubmit}>
             Try the free grader

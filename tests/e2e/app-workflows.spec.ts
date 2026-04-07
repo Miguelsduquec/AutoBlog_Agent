@@ -106,7 +106,7 @@ test("unsubscribed users are sent to pricing and subscribed users can continue",
 
   await page.goto("/app/dashboard");
   await expect(page).toHaveURL(/\/pricing\?next=/);
-  await expect(page.getByRole("heading", { name: "Autoblog Agent monthly" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Paid subscription only" })).toBeVisible();
 
   await startSubscription(page, "/app/dashboard");
   await expect(page.locator("main").getByRole("heading", { name: "Dashboard" })).toBeVisible();

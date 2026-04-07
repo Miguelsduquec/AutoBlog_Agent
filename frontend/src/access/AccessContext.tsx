@@ -1,6 +1,6 @@
 import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from "react";
 import { api, setApiSessionToken } from "../api/client";
-import { AuthResponse, AuthSnapshot, LoginInput, RegisterInput } from "../types";
+import { AuthResponse, AuthSnapshot, GoogleAuthInput, LoginInput, RegisterInput } from "../types";
 
 const STORAGE_KEY = "autoblog-session-token";
 
@@ -17,6 +17,7 @@ type AccessContextValue = {
   loading: boolean;
   register: (input: RegisterInput) => Promise<AuthResponse>;
   login: (input: LoginInput) => Promise<AuthResponse>;
+  loginWithGoogle: (input: GoogleAuthInput) => Promise<AuthResponse>;
   logout: () => Promise<void>;
   refreshAuth: () => Promise<AuthSnapshot>;
 };
@@ -117,6 +118,14 @@ export function AccessProvider({ children }: PropsWithChildren) {
       },
       async login(input) {
         const response = await api.login(input);
+        setAuth(response.session);
+        setSessionToken(response.sessionToken);
+        persistSessionToken(response.sessionToken);
+        setApiSessionToken(response.sessionToken);
+        return response;
+      },
+      async loginWithGoogle(input) {
+        const response = await api.googleLogin(input);
         setAuth(response.session);
         setSessionToken(response.sessionToken);
         persistSessionToken(response.sessionToken);

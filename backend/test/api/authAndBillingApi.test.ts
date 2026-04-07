@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createApp } from "../../src/app";
-import { authHeaders, loginUser, registerAndSubscribeUser, registerUser, TEST_PASSWORD } from "../helpers/auth";
+import { db } from "../../src/db/database";
+import { authHeaders, googleLoginUser, loginUser, registerAndSubscribeUser, registerUser, TEST_PASSWORD } from "../helpers/auth";
 import { invokeApp } from "../helpers/invokeApp";
 
 const app = createApp({ seed: false });
@@ -29,6 +30,15 @@ describe("Auth and billing API", () => {
     expect(login.response.status).toBe(200);
     expect((login.response.body as any).session.user.email).toBe(email);
 
+    const storedUser = db
+      .prepare("SELECT email, password_hash, google_sub FROM users WHERE lower(email) = lower(?) LIMIT 1")
+      .get(email) as { email: string; password_hash: string; google_sub: string } | undefined;
+
+    expect(storedUser?.email).toBe(email);
+    expect(storedUser?.password_hash).not.toBe(TEST_PASSWORD);
+    expect(storedUser?.password_hash).toMatch(/^[a-f0-9]+:[a-f0-9]+$/);
+    expect(storedUser?.google_sub).toBe("");
+
     const logoutResponse = await invokeApp(app, {
       method: "POST",
       url: "/api/auth/logout",
@@ -36,6 +46,64 @@ describe("Auth and billing API", () => {
     });
 
     expect(logoutResponse.status).toBe(204);
+  });
+
+  it("supports Google sign-in, links an existing account by email, and preserves subscription access", async () => {
+    const email = `google-link-${Date.now()}@example.com`;
+    const existing = await registerAndSubscribeUser(app, email);
+
+    const googleLogin = await googleLoginUser(app, email, "Linked Google User");
+    expect(googleLogin.response.status).toBe(200);
+    expect((googleLogin.response.body as any).session.user.email).toBe(email);
+    expect((googleLogin.response.body as any).session.hasActiveSubscription).toBe(true);
+
+    const storedUser = db
+      .prepare("SELECT email, password_hash, google_sub FROM users WHERE lower(email) = lower(?) LIMIT 1")
+      .get(email) as { email: string; password_hash: string; google_sub: string } | undefined;
+
+    expect(storedUser?.password_hash).toMatch(/^[a-f0-9]+:[a-f0-9]+$/);
+    expect(storedUser?.google_sub).toBe(`mock-google-sub:${email}`);
+
+    const session = await invokeApp(app, {
+      method: "GET",
+      url: "/api/auth/session",
+      headers: authHeaders(googleLogin.sessionToken)
+    });
+
+    expect(session.status).toBe(200);
+    expect((session.body as any).hasActiveSubscription).toBe(true);
+    expect((session.body as any).subscription.status).toBe("active");
+
+    const passwordLogin = await loginUser(app, email, TEST_PASSWORD);
+    expect(passwordLogin.response.status).toBe(200);
+    expect(existing.checkout.status).toBe(201);
+  });
+
+  it("creates Google-only accounts without storing a local password hash and blocks password login for them", async () => {
+    const email = `google-only-${Date.now()}@example.com`;
+    const googleLogin = await googleLoginUser(app, email, "Google Only User");
+
+    expect(googleLogin.response.status).toBe(200);
+    expect((googleLogin.response.body as any).session.user.email).toBe(email);
+
+    const storedUser = db
+      .prepare("SELECT password_hash, google_sub FROM users WHERE lower(email) = lower(?) LIMIT 1")
+      .get(email) as { password_hash: string | null; google_sub: string } | undefined;
+
+    expect(storedUser?.password_hash).toBeNull();
+    expect(storedUser?.google_sub).toBe(`mock-google-sub:${email}`);
+
+    const passwordLogin = await invokeApp(app, {
+      method: "POST",
+      url: "/api/auth/login",
+      body: {
+        email,
+        password: TEST_PASSWORD
+      }
+    });
+
+    expect(passwordLogin.status).toBe(409);
+    expect((passwordLogin.body as any).code).toBe("google_login_required");
   });
 
   it("creates a checkout session for an authenticated user", async () => {
@@ -59,6 +127,48 @@ describe("Auth and billing API", () => {
 
     expect((session.body as any).hasActiveSubscription).toBe(true);
     expect((session.body as any).subscription.status).toBe("active");
+    expect((response.body as any).plan).toBe("monthly");
+    expect((response.body as any).priceId).toBeTruthy();
+  });
+
+  it("creates a yearly checkout session when the annual plan is selected", async () => {
+    const registration = await registerUser(app, `billing-yearly-${Date.now()}@example.com`);
+
+    const response = await invokeApp(app, {
+      method: "POST",
+      url: "/api/billing/create-checkout-session",
+      headers: authHeaders(registration.sessionToken),
+      body: {
+        plan: "yearly"
+      }
+    });
+
+    expect(response.status).toBe(201);
+    expect((response.body as any).plan).toBe("yearly");
+    expect((response.body as any).priceId).toBeTruthy();
+
+    const subscription = db
+      .prepare("SELECT stripe_price_id, status FROM subscriptions WHERE user_id = (SELECT user_id FROM user_sessions WHERE token = ? LIMIT 1)")
+      .get(registration.sessionToken) as { stripe_price_id: string; status: string } | undefined;
+
+    expect(subscription?.stripe_price_id).toBe((response.body as any).priceId);
+    expect(subscription?.status).toBe("active");
+  });
+
+  it("rejects invalid billing plans", async () => {
+    const registration = await registerUser(app, `billing-invalid-${Date.now()}@example.com`);
+
+    const response = await invokeApp(app, {
+      method: "POST",
+      url: "/api/billing/create-checkout-session",
+      headers: authHeaders(registration.sessionToken),
+      body: {
+        plan: "weekly"
+      }
+    });
+
+    expect(response.status).toBe(400);
+    expect((response.body as any).code).toBe("invalid_billing_plan");
   });
 
   it("updates subscription status through the webhook handler", async () => {
@@ -128,6 +238,86 @@ describe("Auth and billing API", () => {
 
     expect((activeSession.body as any).hasActiveSubscription).toBe(true);
     expect((activeSession.body as any).subscription.status).toBe("active");
+  });
+
+  it("updates period end and subscription metadata from invoice and subscription webhooks", async () => {
+    const registration = await registerAndSubscribeUser(app, `webhook-period-${Date.now()}@example.com`);
+    const session = await invokeApp(app, {
+      method: "GET",
+      url: "/api/auth/session",
+      headers: authHeaders(registration.sessionToken)
+    });
+    const userId = (session.body as any).user.id as string;
+    const currentSubscriptionId = (session.body as any).subscription.stripeSubscriptionId as string;
+    const yearlyPriceId = "price_test_yearly";
+    const periodEndUnix = Math.floor(Date.now() / 1000) + 86400 * 365;
+
+    const invoicePaid = await invokeApp(app, {
+      method: "POST",
+      url: "/api/billing/webhook",
+      body: {
+        type: "invoice.paid",
+        data: {
+          object: {
+            customer: `cus_invoice_${Date.now()}`,
+            subscription: currentSubscriptionId,
+            lines: {
+              data: [
+                {
+                  period: {
+                    end: periodEndUnix
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    });
+
+    expect(invoicePaid.status).toBe(200);
+
+    const updated = await invokeApp(app, {
+      method: "POST",
+      url: "/api/billing/webhook",
+      body: {
+        type: "customer.subscription.updated",
+        data: {
+          object: {
+            id: currentSubscriptionId,
+            customer: `cus_invoice_${Date.now()}`,
+            status: "past_due",
+            current_period_end: periodEndUnix,
+            metadata: {
+              userId
+            },
+            items: {
+              data: [
+                {
+                  price: {
+                    id: yearlyPriceId
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    });
+
+    expect(updated.status).toBe(200);
+
+    const subscriptionRow = db
+      .prepare("SELECT stripe_price_id, status, current_period_end FROM subscriptions WHERE user_id = ? LIMIT 1")
+      .get(userId) as { stripe_price_id: string; status: string; current_period_end: string } | undefined;
+    const userRow = db
+      .prepare("SELECT stripe_customer_id FROM users WHERE id = ? LIMIT 1")
+      .get(userId) as { stripe_customer_id: string } | undefined;
+
+    expect(subscriptionRow?.stripe_price_id).toBe(yearlyPriceId);
+    expect(subscriptionRow?.status).toBe("past_due");
+    expect(subscriptionRow?.current_period_end).toBe(new Date(periodEndUnix * 1000).toISOString());
+    expect(userRow?.stripe_customer_id).toMatch(/^cus_invoice_/);
   });
 
   it("blocks unsubscribed users and allows subscribed users into paid app routes", async () => {

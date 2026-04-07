@@ -54,13 +54,13 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: `/bin/zsh -lc "rm -rf ${tempRoot} && mkdir -p ${tempRoot}/exports && PORT=${backendPort} DB_PATH=${tempRoot}/e2e.db EXPORTS_DIR=${tempRoot}/exports SEED_ON_BOOT=false node backend/dist/server.js"`,
+      command: `/bin/zsh -lc "rm -rf ${tempRoot} && mkdir -p ${tempRoot}/exports && PORT=${backendPort} DB_PATH=${tempRoot}/e2e.db EXPORTS_DIR=${tempRoot}/exports SEED_ON_BOOT=false GOOGLE_AUTH_MODE=mock node backend/dist/server.js"`,
       url: `http://127.0.0.1:${backendPort}/api/health`,
       reuseExistingServer: false,
       timeout: 120_000
     },
     {
-      command: `/bin/zsh -lc "VITE_API_BASE_URL=http://127.0.0.1:${backendPort}/api npm run dev --workspace frontend -- --host 127.0.0.1 --port ${frontendPort}"`,
+      command: `/bin/zsh -lc "VITE_API_BASE_URL=http://127.0.0.1:${backendPort}/api VITE_GOOGLE_AUTH_MODE=mock npm run dev --workspace frontend -- --host 127.0.0.1 --port ${frontendPort}"`,
       url: `http://127.0.0.1:${frontendPort}`,
       reuseExistingServer: false,
       timeout: 120_000

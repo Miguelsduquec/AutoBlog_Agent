@@ -143,7 +143,11 @@ function normalizeConfidenceLevel(value: unknown): AnalysisConfidenceLevel {
 
 function normalizeSubscriptionStatus(value: unknown): SubscriptionStatus {
   const normalized = String(value ?? "inactive").toLowerCase();
-  if (normalized === "trialing" || normalized === "active" || normalized === "past_due" || normalized === "canceled" || normalized === "unpaid") {
+  if (normalized === "trialing") {
+    return "active";
+  }
+
+  if (normalized === "active" || normalized === "past_due" || normalized === "canceled" || normalized === "unpaid") {
     return normalized;
   }
 
@@ -209,7 +213,8 @@ export function mapUser(row: Row): User {
     id: String(row.id),
     email: String(row.email),
     name: String(row.name ?? ""),
-    passwordHash: String(row.password_hash ?? ""),
+    passwordHash: row.password_hash == null ? null : String(row.password_hash),
+    googleSub: String(row.google_sub ?? ""),
     stripeCustomerId: String(row.stripe_customer_id ?? ""),
     createdAt: String(row.created_at),
     updatedAt: String(row.updated_at)

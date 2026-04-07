@@ -14,7 +14,8 @@ export type OpportunityIntent = "informational" | "commercial" | "comparison" | 
 export type OpportunityPriority = "low" | "medium" | "high";
 export type OpportunityDifficulty = "low" | "medium" | "high";
 export type AnalysisConfidenceLevel = "low" | "medium" | "high";
-export type SubscriptionStatus = "inactive" | "trialing" | "active" | "past_due" | "canceled" | "unpaid";
+export type SubscriptionStatus = "inactive" | "active" | "past_due" | "canceled" | "unpaid";
+export type BillingPlan = "monthly" | "yearly";
 
 export interface Website {
   id: string;
@@ -75,9 +76,21 @@ export interface LoginInput {
   password: string;
 }
 
+export interface GoogleAuthInput {
+  credential: string;
+  email?: string;
+  name?: string;
+}
+
 export interface BillingCheckoutSession {
   id: string;
   url: string;
+  plan: BillingPlan;
+  priceId: string;
+}
+
+export interface BillingCheckoutInput {
+  plan?: BillingPlan;
 }
 
 export interface WebsitePage {

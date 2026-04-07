@@ -11,7 +11,7 @@ router.post(
   "/billing/create-checkout-session",
   asyncHandler(async (request, response) => {
     const user = authService.requireUser(readSessionToken(request));
-    response.status(201).json(await billingService.createCheckoutSession(user));
+    response.status(201).json(await billingService.createCheckoutSession(user, request.body ?? {}));
   })
 );
 

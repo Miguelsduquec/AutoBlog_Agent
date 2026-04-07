@@ -2,6 +2,7 @@ import {
   AuthResponse,
   AuthSnapshot,
   ArticlePlan,
+  BillingCheckoutInput,
   BillingCheckoutSession,
   ContentGapGraderReport,
   AutomationRun,
@@ -13,6 +14,7 @@ import {
   ExportGenerationResult,
   ExportJob,
   ExportJobDetail,
+  GoogleAuthInput,
   LoginInput,
   OpportunityGenerationResult,
   OpportunityInput,
@@ -92,13 +94,19 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload)
     }),
+  googleLogin: (payload: GoogleAuthInput) =>
+    request<AuthResponse>("/auth/google", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    }),
   logout: () =>
     request<void>("/auth/logout", {
       method: "POST"
     }),
-  createCheckoutSession: () =>
+  createCheckoutSession: (payload: BillingCheckoutInput = {}) =>
     request<BillingCheckoutSession>("/billing/create-checkout-session", {
-      method: "POST"
+      method: "POST",
+      body: JSON.stringify(payload)
     }),
   getDashboard: () => request<DashboardSnapshot>("/dashboard"),
   getWebsites: () => request<Website[]>("/websites"),

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { loginAccount, registerAndSubscribe } from "./helpers";
+import { loginAccount, registerAndSubscribe, registerWithGoogle, startSubscription } from "./helpers";
 
 test("dashboard and websites page load behind auth and subscription", async ({ page }) => {
   await page.goto("/app/dashboard");
@@ -30,4 +30,15 @@ test("mobile app navigation opens cleanly", async ({ page }, testInfo) => {
   await expect(page.locator(".sidebar.open")).toBeVisible();
   await page.getByTestId("sidebar-close-button").click();
   await expect(page.locator(".sidebar.open")).toHaveCount(0);
+});
+
+test("Google sign-in is available and can reach the paid app after checkout", async ({ page }) => {
+  await registerWithGoogle(page, "/pricing?next=/app/dashboard");
+  await expect(page.getByRole("heading", { name: "Paid subscription only" })).toBeVisible();
+  await startSubscription(page, "/app/dashboard");
+  await expect(page.locator("main").getByRole("heading", { name: "Dashboard" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Log out" }).click();
+  await expect(page).toHaveURL(/\/login\?next=/);
+  await expect(page.getByTestId("google-auth-button")).toBeVisible();
 });

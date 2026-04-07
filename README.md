@@ -19,6 +19,7 @@ The current implementation is intentionally focused on a practical MVP foundatio
 - Export packaging for publication-ready article assets
 - Manual automation runs for the full multi-step article pipeline
 - Email/password authentication
+- Google sign-in
 - Subscription-gated app access
 - Stripe checkout session and webhook support
 - Core docs
@@ -67,12 +68,75 @@ If you seeded the demo database, you can log in with:
 - Email: `demo@autoblog-agent.local`
 - Password: `demo12345`
 
-`BILLING_MODE=mock` keeps local checkout simple. If you add Stripe keys and a price ID, checkout will use Stripe instead.
+`BILLING_MODE=mock` keeps local checkout simple. In production, do not leave billing in mock mode.
+
+For two paid plans, set these Stripe Price IDs in `.env`:
+
+- `STRIPE_PRICE_ID_MONTHLY=price_...`
+- `STRIPE_PRICE_ID_YEARLY=price_...`
+- `STRIPE_SECRET_KEY=sk_...`
+- `STRIPE_WEBHOOK_SECRET=whsec_...`
+- `STRIPE_CHECKOUT_SUCCESS_URL=https://your-app.com/pricing?checkout=success`
+- `STRIPE_CHECKOUT_CANCEL_URL=https://your-app.com/pricing?checkout=cancelled`
+
+`STRIPE_PRICE_ID` still works as a monthly fallback, but the preferred setup is one monthly price ID plus one yearly price ID.
+
+Monthly and yearly mapping:
+
+- `monthly` -> `STRIPE_PRICE_ID_MONTHLY`
+- `yearly` -> `STRIPE_PRICE_ID_YEARLY`
+
+Google sign-in runs in local mock mode by default with the sample `.env.example`. For real Google OAuth, set:
+
+- `GOOGLE_AUTH_MODE=live`
+- `GOOGLE_CLIENT_ID=your-google-client-id`
+- `VITE_GOOGLE_AUTH_MODE=live`
+- `VITE_GOOGLE_CLIENT_ID=your-google-client-id`
 
 ## Build
 
 ```bash
 npm run build
+```
+
+## Stripe modes
+
+Local development:
+
+- keep `BILLING_MODE=mock`
+- checkout activates locally so the paid funnel is easy to test
+
+Live / production:
+
+- set `BILLING_MODE=stripe`
+- set `STRIPE_SECRET_KEY`
+- set `STRIPE_PRICE_ID_MONTHLY`
+- set `STRIPE_PRICE_ID_YEARLY`
+- set `STRIPE_WEBHOOK_SECRET`
+- set `STRIPE_CHECKOUT_SUCCESS_URL`
+- set `STRIPE_CHECKOUT_CANCEL_URL`
+
+The frontend never receives Stripe secrets. It only sends the selected billing plan to the backend.
+
+## Stripe webhook setup
+
+Required events:
+
+- `checkout.session.completed`
+- `invoice.paid`
+- `customer.subscription.updated`
+- `customer.subscription.deleted`
+
+Local webhook testing with Stripe CLI:
+
+```bash
+stripe listen --forward-to localhost:3001/api/billing/webhook
+```
+
+Then copy the signing secret printed by Stripe CLI into:
+
+```bash
+STRIPE_WEBHOOK_SECRET=whsec_...
 ```
 
 ## Project structure
@@ -101,6 +165,13 @@ docs/       Product, architecture, and roadmap notes
 - If you want demo-style auto-seeding for a temporary environment, set `SEED_ON_BOOT=true`.
 - The free Content Gap Grader stays public, but the app itself now requires login plus an active subscription.
 - In local mock billing mode, checkout activates the subscription immediately so the paid flow remains testable without real Stripe keys.
+- In live Stripe mode, the backend creates Checkout Sessions in subscription mode and verifies webhooks against the raw request body plus `STRIPE_WEBHOOK_SECRET`.
+- Credentials are stored in SQLite:
+  - user emails in `users.email`
+  - password hashes in `users.password_hash`
+  - Google account ids in `users.google_sub`
+- Passwords are not stored in plaintext. Local-password accounts use Node's built-in `crypto.scryptSync` with a random 16-byte salt, stored as `salt:hash`.
+- Google-only accounts store `users.password_hash` as `NULL`, not an empty string, and password login is blocked for those accounts.
 - The crawler, website analysis, opportunity generation, article planning, draft generation, automation orchestration, and export services are modular mock implementations so real AI providers or CMS integrations can replace them later without changing the product workflow.
 - Export packages are written to `backend/output`.
 - Automation runs are synchronous in this MVP and are intentionally structured so queues or background workers can be added later.

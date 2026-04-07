@@ -52,6 +52,21 @@ export async function registerAccount(page: Page, next = "/pricing") {
   };
 }
 
+export async function registerWithGoogle(page: Page, next = "/pricing") {
+  const email = `google-${Date.now()}-${Math.round(Math.random() * 1_000)}@example.com`;
+
+  await page.goto(`/register?next=${encodeURIComponent(next)}`);
+  await expect(page.getByRole("heading", { name: "Create your account" })).toBeVisible();
+  await page.getByLabel("Name").fill("Google User");
+  await page.getByLabel("Email").fill(email);
+  await page.getByTestId("google-auth-button").click();
+  await expect(page).toHaveURL(new RegExp(escapeRegExp(next)));
+
+  return {
+    email
+  };
+}
+
 export async function loginAccount(page: Page, email: string, password = TEST_PASSWORD, next = "/app/dashboard") {
   await page.goto(`/login?next=${encodeURIComponent(next)}`);
   await expect(page.getByRole("heading", { name: "Log in" })).toBeVisible();
@@ -61,7 +76,7 @@ export async function loginAccount(page: Page, email: string, password = TEST_PA
   await expect(page).toHaveURL(new RegExp(escapeRegExp(next)));
 }
 
-export async function startSubscription(page: Page, next = "/app/dashboard") {
+export async function startSubscription(page: Page, next = "/app/dashboard", plan: "monthly" | "yearly" = "monthly") {
   const checkoutRequest = page.waitForResponse(
     (response) =>
       response.request().method() === "POST" &&
@@ -69,7 +84,13 @@ export async function startSubscription(page: Page, next = "/app/dashboard") {
       response.status() < 500
   );
 
-  await page.getByRole("button", { name: "Start monthly subscription" }).click();
+  if (plan === "yearly") {
+    await page.getByTestId("pricing-plan-yearly").click();
+  } else {
+    await page.getByTestId("pricing-plan-monthly").click();
+  }
+
+  await page.getByTestId("pricing-checkout-button").click();
   await checkoutRequest;
 
   try {

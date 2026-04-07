@@ -12,6 +12,7 @@ Autoblog Agent should be tested in layers.
 The goal is not to snapshot everything. The goal is to protect the workflow:
 
 - register, login, logout
+- Google sign-in
 - subscription checkout and billing state
 - website analysis
 - opportunity generation
@@ -77,6 +78,18 @@ npm run seed
 Do not rely on automatic seeding during tests. Tests use their own isolated database setup.
 
 Local billing defaults to `BILLING_MODE=mock`, so tests can exercise the paid-only flow without live Stripe credentials.
+
+For live-style Stripe configuration, set:
+
+- `BILLING_MODE=stripe`
+- `STRIPE_SECRET_KEY`
+- `STRIPE_PRICE_ID_MONTHLY`
+- `STRIPE_PRICE_ID_YEARLY`
+- `STRIPE_WEBHOOK_SECRET`
+- `STRIPE_CHECKOUT_SUCCESS_URL`
+- `STRIPE_CHECKOUT_CANCEL_URL`
+
+Local Google sign-in defaults to `GOOGLE_AUTH_MODE=mock` and `VITE_GOOGLE_AUTH_MODE=mock`, so backend and Playwright tests can exercise the OAuth path without live Google credentials.
 
 Run all backend tests:
 
@@ -181,6 +194,34 @@ npm run playwright:test
 - no broad snapshot tests for generated markdown or HTML when focused structural assertions are enough
 - no brittle full-app screenshots for every page or device
 - no dependency on live third-party websites for E2E coverage
+
+## Stripe Webhook Notes
+
+- `/api/billing/webhook` must receive the raw request body.
+- In live Stripe mode, signature verification uses:
+  - raw request body
+  - `Stripe-Signature` header
+  - `STRIPE_WEBHOOK_SECRET`
+- Required events:
+  - `checkout.session.completed`
+  - `invoice.paid`
+  - `customer.subscription.updated`
+  - `customer.subscription.deleted`
+
+Local webhook test with Stripe CLI:
+
+```bash
+stripe listen --forward-to localhost:3001/api/billing/webhook
+```
+
+## Auth Storage Notes
+
+- Emails are stored in `users.email`.
+- Local password hashes are stored in `users.password_hash`.
+- Google account subjects are stored in `users.google_sub`.
+- Passwords are not stored in plaintext.
+- Local password hashing uses Node's built-in `crypto.scryptSync` with a random 16-byte salt, stored as `salt:hash`.
+- Google-only accounts store `users.password_hash` as `NULL`.
 
 ## Remaining Manual Checks
 

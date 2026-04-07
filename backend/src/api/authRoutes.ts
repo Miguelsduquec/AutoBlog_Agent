@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { AuthService } from "../services/authService";
-import { readSessionToken } from "./utils";
+import { asyncHandler, readSessionToken } from "./utils";
 
 const router = Router();
 const authService = new AuthService();
@@ -16,6 +16,13 @@ router.post("/auth/register", (request, response) => {
 router.post("/auth/login", (request, response) => {
   response.json(authService.login(request.body ?? {}));
 });
+
+router.post(
+  "/auth/google",
+  asyncHandler(async (request, response) => {
+    response.json(await authService.loginWithGoogle(request.body ?? {}));
+  })
+);
 
 router.post("/auth/logout", (request, response) => {
   authService.logout(readSessionToken(request));
